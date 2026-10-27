@@ -89,35 +89,28 @@ P0 阶段只有 `scan`（只读）与 `install/uninstall`。完整命令契约�
 人类模式（节选）：
 
 ~~~
-DSH-clean v0.0.0-dev - 2026-10-27 23:50
+DSH-clean v0.0.0-dev - 2026-10-27 23:58
 
 环境
   DSH 桌面端   0.2.1-rc.3
   DSH 运行时   44.7.0
-  总占用       3.6GB · 53,311 个文件 · 耗时 1.0s
+  总占用       3.7GB · 53,620 个文件 · 耗时 1.0s
 
 DSH 相关文件夹（8）
   install            D:\Software\DeepSeek Harness               1.0GB  客户端安装目录 · launcher
-  data               ~\.dsh                                     2.0GB  用户数据（配置 / 插件 / 会话） · default
+  data               ~\.dsh                                     2.0GB  用户数据 · default
   appdata            ~\AppData\Roaming\@deepseek-ai            86.2MB  Electron 用户数据 · default
   updater:dsh…pdater ~\AppData\Local\@deeps…h-desktop-updater 552.6MB  更新缓存 · default
-  workspace:1        D:\DeepSeek Harness                      246.8KB  工作区 · config · 浅扫
+  workspace:1        D:\DeepSeek Harness                       44.0MB  工作区 · 浅扫
 
-占用最大的顶层项
-  data\profiles                          1.0GB  28033 个文件  profile 与插件本体
-  data\dsh-ops                         392.4MB   9617 个文件  运维工具与内置 PortableGit
-  ...
-
-本轮变动
-  新增 0 · 改动 0 · 消失 0
-  无实质变化
-
-与基线比较
-  基线时间 2026-10-27 · 差异 0 项
-  安装目录  新增 0 · 改动 0 · 消失 0（与基线一致）
+纯净度（对比安装时的状态）
+  安装时刻   2026-10-23 16:00 · 7,814 个文件中 100.0% 落在同一分钟
+  安装目录   偏离 2 处（0.03%，多为保留原时间戳的静态文件）
+  插件包     1 处手工改动痕迹（包内留了备份文件）
+  配置文件   最近改动 2026-10-27 23:48（配置会正常变化，不计为脏）
 
 会话
-  44 个会话 · 3 个工作区 · 35.9MB · 44 个文件
+  45 个会话 · 3 个工作区 · 36.1MB
 
 残留（A 档 5 · B 档 2 · 合计 553.1MB）
    1  B  updater:dsh-desktop-updater\installer.exe  276.0MB  已下载的更新包，更新完成后可清
@@ -127,7 +120,8 @@ DSH 相关文件夹（8）
 agent 模式（`--agent`，固定两行以内）：
 
 ~~~
-PURITY v0.0.0-dev dsh=44.7.0 roots=8 files=53311 changed=0 keep=53268 cache=25 residue=7/553.1MB unknown=0 sessions=44/35.9MB drift=0 next=review
+PURITY v0.0.0-dev dsh=44.7.0 roots=8 files=53620 residue=7/553.1MB unknown=0 sessions=45/36.1MB purity=3 next=review
+PURITY-DRIFT 3 files changed since install
 ~~~
 
 ## 支持范围
