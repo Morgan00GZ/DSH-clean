@@ -120,6 +120,8 @@ find-dsh  ->  roots.json          发现安装 / 数据 / AppData / 工作区
 - **LOCKED**：`EBUSY` / `EPERM` 的条目记 `LOCKED`，跳过并留在队列，下轮重试，不报错、不重试死循环
 - 唯一需要关闭客户端的场景：要移动正被映射的安装目录文件（罕见），届时工具会明确提示
 
+**Electron 会把 `.asar` 当归档处理**：`lstat` 返回 `size=0`、`mtime=现在`，`open` 直接 `ENOENT`。若照常使用 `node:fs`，安装目录里两个 asar 会永远显示"刚被改过"。所以引擎优先加载 Electron 自带的 `original-fs`（绕过 asar 层，拿到真实 stat），拿不到时退回普通 `node:fs`。这是"引擎必须看见真实文件系统"的直接后果，也是校验类工具容易忽略的坑。
+
 ## 6. 成本模型
 
 | 使用方式 | token | 说明 |

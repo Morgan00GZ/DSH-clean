@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "halfBakedMinutes": 10,
+  "staleLogDays": 90,
+  "bigArtifactBytes": 104857600,
+  "volatile": [
+    "sessions/",
+    "logs/",
+    "storages/",
+    "cache/",
+    "guardian/",
+    "*.ndjson",
+    "*.jsonl",
+    "*.sqlite",
+    "*.sqlite-wal",
+    "*.sqlite-shm",
+    "*.lock",
+    "dsh-service-session-titles.json",
+    "dsh-service-usage-index.json",
+    "last-run.json"
+  ],
+  "prune": [
+    ".git",
+    "node_modules/.cache"
+  ],
+  "skipNames": [
+    "$Recycle.Bin",
+    "System Volume Information",
+    "desktop.ini"
+  ]
+}

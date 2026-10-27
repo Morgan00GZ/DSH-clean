@@ -68,6 +68,7 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 | `--plan <file>` | `apply` | 指定历史计划文件 |
 | `--upstream` | `verify` | 联网读取 `latest.yml` 做安装包比对 |
 | `--accept-patch <file>` | `verify` | 把当前哈希登记为「已批准补丁」 |
+| `--install-dir <path>` | `scan` | 手动指定 DSH 安装目录（注册表与默认位置都失败时用） |
 | `--project` | `install` | 装到当前工作区的 `.dsh/skills`，而不是用户级目录 |
 | `--purge` | `uninstall` | 连状态目录与报告一起删（默认保留） |
 
