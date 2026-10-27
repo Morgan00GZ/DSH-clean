@@ -86,35 +86,48 @@ P0 阶段只有 `scan`（只读）与 `install/uninstall`。完整命令契约�
 
 ## 输出长什么样
 
-人类模式：
+人类模式（节选）：
 
 ~~~
-DSH-clean v0.1.0 - 2026-10-27 21:58
+DSH-clean v0.0.0-dev - 2026-10-27 23:50
 
-install    D:\Software\DeepSeek Harness              44.7.0   已登记
-data       C:\Users\User\.dsh                       2.9 GB   已登记
-appdata    %APPDATA%\@deepseek-ai\dsh-desktop                   已登记
-updater    %LOCALAPPDATA%\@deepseek-ai\dsh-desktop-updater      已登记
-workspace  D:\DeepSeek Harness                                 已登记
+环境
+  DSH 桌面端   0.2.1-rc.3
+  DSH 运行时   44.7.0
+  总占用       3.6GB · 53,311 个文件 · 耗时 1.0s
 
-本轮变化   changed 12 - new 3 - gone 1
-归类       KEEP 41,002 - CACHE 186 - RESIDUE 3 (1.2 GB) - UNKNOWN 4 - LOCKED 0
+DSH 相关文件夹（8）
+  install            D:\Software\DeepSeek Harness               1.0GB  客户端安装目录 · launcher
+  data               ~\.dsh                                     2.0GB  用户数据（配置 / 插件 / 会话） · default
+  appdata            ~\AppData\Roaming\@deepseek-ai            86.2MB  Electron 用户数据 · default
+  updater:dsh…pdater ~\AppData\Local\@deeps…h-desktop-updater 552.6MB  更新缓存 · default
+  workspace:1        D:\DeepSeek Harness                      246.8KB  工作区 · config · 浅扫
 
-残留（A 档 2 - B 档 1）
-  1  B  data/dsh-config-manager/rollback-points/index.v2.backup.json   467.8 MB   已被取代
-  2  A  data/profiles/desktop/cordis.patch.yml.bak-17929796            72 B       临时备份
-  3  A  data/dsh-config-manager/exports/dsh-config-auto-20261021.zip   66 KB      可重建
+占用最大的顶层项
+  data\profiles                          1.0GB  28033 个文件  profile 与插件本体
+  data\dsh-ops                         392.4MB   9617 个文件  运维工具与内置 PortableGit
+  ...
 
-未归类 4 项：已写入 pending.md，一句话可定，之后进判例库
+本轮变动
+  新增 0 · 改动 0 · 消失 0
+  无实质变化
 
-报告    %LOCALAPPDATA%\dsh-clean\reports\20261027-215812\report.md
-下一步  review
+与基线比较
+  基线时间 2026-10-27 · 差异 0 项
+  安装目录  新增 0 · 改动 0 · 消失 0（与基线一致）
+
+会话
+  44 个会话 · 3 个工作区 · 35.9MB · 44 个文件
+
+残留（A 档 5 · B 档 2 · 合计 553.1MB）
+   1  B  updater:dsh-desktop-updater\installer.exe  276.0MB  已下载的更新包，更新完成后可清
+   ...
 ~~~
 
-agent 模式（`--agent`，固定单行）：
+agent 模式（`--agent`，固定两行以内）：
 
 ~~~
-PURITY v0.1.0 dsh=44.7.0 roots=7 files=41208 changed=12 keep=41002 cache=186 residue=3/1.2GB unknown=4 locked=0 next=review
+PURITY v0.0.0-dev dsh=44.7.0 roots=8 files=53311 changed=0 keep=53268 cache=25 residue=7/553.1MB unknown=0 sessions=44/35.9MB drift=0 next=review
 ~~~
 
 ## 支持范围

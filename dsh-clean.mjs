@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { runScan } from "./lib/scan.mjs";
+import { runScan, runBaseline } from "./lib/scan.mjs";
 import { renderHuman, renderAgent, renderJson } from "./lib/report.mjs";
 import { install, uninstall, defaultStateDir } from "./lib/install.mjs";
 import { VERSION } from "./lib/version.mjs";
@@ -14,6 +14,7 @@ const HELP = [
   "用法：dsh-clean.cmd <命令> [选项]",
   "",
   "  scan        扫描并生成报告（不删任何东西）",
+  "  baseline    把当前状态记为「刚安装并配置完毕」的基准",
   "  install     部署程序与技能到本机",
   "  uninstall   卸载程序与技能（状态默认保留）",
   "  version     显示版本",
@@ -68,6 +69,10 @@ try {
     const { lines, code } = uninstall({ purge: opt.has("purge") });
     console.log(lines.join("\n"));
     process.exitCode = code;
+  } else if (cmd === "baseline") {
+    const stateDir = opt.val("state-dir") || defaultStateDir();
+    const { lines } = await runBaseline({ stateDir, appDir: APP_DIR, installDir: opt.val("install-dir") || null });
+    console.log(lines.join("\n"));
   } else if (cmd === "scan") {
     const stateDir = opt.val("state-dir") || defaultStateDir();
     const { ctx, code } = await runScan({ stateDir, appDir: APP_DIR, full: opt.has("full"), installDir: opt.val("install-dir") || null, argv: rest });

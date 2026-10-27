@@ -8,6 +8,7 @@
   inventory.json          最近一次完整快照
   baseline-install.json   安装目录哈希基线（P1 起）
   known.json              本机判例库
+  baseline.json           「刚安装并配置完毕」的基准（安装目录指纹 + 配置哈希 + 顶层清单）
   install.json            安装记录（程序/技能的实际落地路径与版本）
   reports\
     20261027-215812\

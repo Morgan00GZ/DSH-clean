@@ -18,7 +18,8 @@ dsh-clean.cmd <command> [options]
 |---|---|---|---|
 | `install` | P0 | 把程序部署到固定位置，并把技能装进 DSH 的技能目录 | 写 LOCALAPPDATA、`~/.dsh/skills` |
 | `uninstall` | P0 | 反向清除：程序、技能（默认保留状态与报告） | 同上 |
-| `scan` | P0 | 发现根目录（首次/表失效时）、快照、归类、写报告与计划草案 | 只写 state 与 reports |
+| `scan` | P0 | 发现全部相关目录、快照、归类、与上次和基线对比、写报告 | 只写 state 与 reports |
+| `baseline` | P0 | 把当前状态记为「刚安装并配置完毕」的基准 | 写 baseline.json |
 | `review` | P2 | 把待确认项整理成中文清单（默认写文件，可选窗口内编号问答），裁决写入判例库 | 写 known.json |
 | `apply` | P2 | 按计划与裁决把文件移入回收站 | 移动文件 |
 | `verify` | P1 | 安装目录一致性校验（基线哈希 + 上游 `latest.yml`） | 写 baseline |
@@ -68,7 +69,7 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 | `--plan <file>` | `apply` | 指定历史计划文件 |
 | `--upstream` | `verify` | 联网读取 `latest.yml` 做安装包比对 |
 | `--accept-patch <file>` | `verify` | 把当前哈希登记为「已批准补丁」 |
-| `--install-dir <path>` | `scan` | 手动指定 DSH 安装目录（注册表与默认位置都失败时用） |
+| `--install-dir <path>` | `scan` `baseline` | 手动指定 DSH 安装目录（注册表与默认位置都失败时用） |
 | `--project` | `install` | 装到当前工作区的 `.dsh/skills`，而不是用户级目录 |
 | `--purge` | `uninstall` | 连状态目录与报告一起删（默认保留） |
 
