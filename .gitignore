@@ -1,0 +1,14 @@
+# 本机状态与报告：绝不入库（含路径、用户名、哈希）
+state/
+reports/
+*.local.json
+
+# 若通过 --state-dir 把状态指到仓库内
+.dsh-clean-state/
+
+# 通用
+node_modules/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
