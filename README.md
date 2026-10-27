@@ -89,39 +89,49 @@ P0 阶段只有 `scan`（只读）与 `install/uninstall`。完整命令契约�
 人类模式（节选）：
 
 ~~~
-DSH-clean v0.0.0-dev - 2026-10-27 23:58
+DSH-clean v0.0.0-dev - 2026-10-28 00:08
 
 环境
   DSH 桌面端   0.2.1-rc.3
   DSH 运行时   44.7.0
-  总占用       3.7GB · 53,620 个文件 · 耗时 1.0s
+  总占用       3.7GB · 53,625 个文件 · 较上次 +34.4KB · 耗时 0.9s
 
 DSH 相关文件夹（8）
   install            D:\Software\DeepSeek Harness               1.0GB  客户端安装目录 · launcher
   data               ~\.dsh                                     2.0GB  用户数据 · default
-  appdata            ~\AppData\Roaming\@deepseek-ai            86.2MB  Electron 用户数据 · default
   updater:dsh…pdater ~\AppData\Local\@deeps…h-desktop-updater 552.6MB  更新缓存 · default
   workspace:1        D:\DeepSeek Harness                       44.0MB  工作区 · 浅扫
 
 纯净度（对比安装时的状态）
   安装时刻   2026-10-23 16:00 · 7,814 个文件中 100.0% 落在同一分钟
   安装目录   偏离 2 处（0.03%，多为保留原时间戳的静态文件）
-  插件包     1 处手工改动痕迹（包内留了备份文件）
-  配置文件   最近改动 2026-10-27 23:48（配置会正常变化，不计为脏）
+  插件包     见下方「插件包（pnpm 仓库校验）」一节
+
+插件包（pnpm 仓库校验）
+  已核对      309 个包 · 27,705 个文件 · 硬链接完好 27,703
+  被改过      1 个文件
+    ~ @njjpro/dsh-remote-workspace\lib/index.js（内容与原件不同）
+  多余/副本   1 个
+    + @njjpro/dsh-remote-workspace\lib/index.js.bak-20261026091204  备份副本（内容与仓库原件相同）
+  名册对账    声明 359 · 实际 309 · 孤儿 0 · 缺失 0 · 版本不符 0
+
+插件数据目录（占多少 / 这次多了多少）
+  dsh-bottom-info-bar         10.7MB        —  最近写入 2026-10-28
+  our-free-model             220.7KB        —  最近写入 2026-10-28
+  dsh-continue               178.2KB    +155B  最近写入 2026-10-28
 
 会话
-  45 个会话 · 3 个工作区 · 36.1MB
+  46 个会话 · 3 个工作区 · 36.5MB
 
 残留（A 档 5 · B 档 2 · 合计 553.1MB）
-   1  B  updater:dsh-desktop-updater\installer.exe  276.0MB  已下载的更新包，更新完成后可清
+   1  B  updater:dsh-desktop-updater\installer.exe  276.0MB  已下载的更新包
    ...
 ~~~
 
 agent 模式（`--agent`，固定两行以内）：
 
 ~~~
-PURITY v0.0.0-dev dsh=44.7.0 roots=8 files=53620 residue=7/553.1MB unknown=0 sessions=45/36.1MB purity=3 next=review
-PURITY-DRIFT 3 files changed since install
+PURITY v0.0.0-dev dsh=44.7.0 roots=8 files=53625 residue=7/553.1MB unknown=0 sessions=46/36.5MB purity=3 plugins=309/2 next=review
 ~~~
 
 ## 支持范围
