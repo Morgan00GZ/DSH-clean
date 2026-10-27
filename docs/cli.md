@@ -16,6 +16,8 @@ dsh-clean.cmd <command> [options]
 
 | 命令 | 阶段 | 作用 | 是否写盘 |
 |---|---|---|---|
+| `install` | P0 | 把程序部署到固定位置，并把技能装进 DSH 的技能目录 | 写 LOCALAPPDATA、`~/.dsh/skills` |
+| `uninstall` | P0 | 反向清除：程序、技能（默认保留状态与报告） | 同上 |
 | `scan` | P0 | 发现根目录（首次/表失效时）、快照、归类、写报告与计划草案 | 只写 state 与 reports |
 | `review` | P2 | 把待确认项整理成中文清单（默认写文件，可选窗口内编号问答），裁决写入判例库 | 写 known.json |
 | `apply` | P2 | 按计划与裁决把文件移入回收站 | 移动文件 |
@@ -23,6 +25,21 @@ dsh-clean.cmd <command> [options]
 | `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR | 写 data |
 
 P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时提示「该命令将在 Pn 提供」。
+
+## 部署（install / uninstall）
+
+`install` 只写三个位置，全部可逆：
+
+| 写什么 | 写去哪 | 卸载时 |
+|---|---|---|
+| 程序本体 | `%LOCALAPPDATA%\dsh-clean\app\` | 删除 |
+| 技能 | `%USERPROFILE%\.dsh\skills\dsh-clean\SKILL.md`（或 `--project` 时工作区下） | 删除 |
+| 安装记录 | `%LOCALAPPDATA%\dsh-clean\install.json` | 保留到卸载完成，用于精确回滚 |
+
+`install` 是幂等的：重复运行即升级程序与技能，不会产生多份副本。
+`uninstall` 按安装记录逐项删除，删除后校验技能目录已不在，避免留下「孤儿技能」——那正是本工具要检查的那类残留。
+
+默认**不动**状态目录与历史报告（里面是你的判例库）；要一起清就加 `--purge`。
 
 ## 交互模型（三条通道）
 
@@ -51,6 +68,8 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 | `--plan <file>` | `apply` | 指定历史计划文件 |
 | `--upstream` | `verify` | 联网读取 `latest.yml` 做安装包比对 |
 | `--accept-patch <file>` | `verify` | 把当前哈希登记为「已批准补丁」 |
+| `--project` | `install` | 装到当前工作区的 `.dsh/skills`，而不是用户级目录 |
+| `--purge` | `uninstall` | 连状态目录与报告一起删（默认保留） |
 
 ## 输出契约
 

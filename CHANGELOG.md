@@ -6,6 +6,8 @@
 
 ### P0 - 只读清点（进行中）
 
+- `install` / `uninstall`：程序部署到 `%LOCALAPPDATA%`，技能装进 `~/.dsh/skills`，可精确回滚
+- 技能 `dsh-clean`：在对话里一句话触发扫描，交互全程留在对话内
 - 根目录发现：注册表卸载项、默认安装位置、portable 版、用户数据、AppData、updater 缓存、工作区
 - 全量元数据快照（path / size / mtime），不哈希全盘
 - 判据引擎 + 内置知识库 + unknown 队列
