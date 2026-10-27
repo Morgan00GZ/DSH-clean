@@ -11,7 +11,8 @@
   reports\
     20261027-215812\
       report.md           人类报告
-      plan.json           计划（含编号）
+      plan.json           计划（含编号，机读）
+      pending.md          待确认清单（中文，人看）
       run.json            本次运行的元数据（耗时、版本、参数）
 ```
 
