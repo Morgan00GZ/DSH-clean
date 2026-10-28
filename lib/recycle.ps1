@@ -146,25 +146,32 @@ foreach ($t in $targets) {
 Start-Sleep -Milliseconds 700
 
 # ---- 4. 校验：回收站里是否真的多了对应条目 --------------------------------
+# 坑：多个被删文件可能同扩展名、同体积（例如两份同版本的更新安装包）。回收站给它们的
+# 条目名各不相同，但如果每项都从「新增条目」里重新挑第一个匹配，第二项就会报出第一项
+# 的名字，看起来像「只进了一个」。所以先把新增条目算一次，再逐项认领、用过即划掉。
+$newByDrive = @{}
+foreach ($drv in $bins.Keys) {
+  $oldNames = @($before[$drv] | ForEach-Object { $_.Name })
+  $newByDrive[$drv] = @(Get-BinEntries $bins[$drv].Dir | Where-Object { $oldNames -notcontains $_.Name })
+}
+$claimed = @{}
 $out = @()
 foreach ($r in $results) {
   if ($r.Kind -eq 'MISSING') {
     $out += [pscustomobject]@{ id = $r.Id; path = $r.Path; status = 'MISSING'; bytes = 0; bin = '-' }
     continue
   }
-  $binDir = $bins[$r.Drive].Dir
-  $after = @(Get-BinEntries $binDir)
-  $oldNames = @($before[$r.Drive] | ForEach-Object { $_.Name })
-  $new = @($after | Where-Object { $oldNames -notcontains $_.Name })
+  $pool = @($newByDrive[$r.Drive] | Where-Object { -not $claimed.ContainsKey($_.Name) })
   $match = $null
   if ($r.Kind -eq 'FILE') {
     $ext = [System.IO.Path]::GetExtension($r.Path)
-    $cands = @($new | Where-Object { -not $_.IsDir -and [System.IO.Path]::GetExtension($_.Name) -eq $ext })
+    $cands = @($pool | Where-Object { -not $_.IsDir -and [System.IO.Path]::GetExtension($_.Name) -eq $ext })
     if ($r.Size -gt 0) { $match = $cands | Where-Object { $_.Length -eq $r.Size } | Select-Object -First 1 }
     if (-not $match) { $match = $cands | Select-Object -First 1 }
   } else {
-    $match = $new | Where-Object { $_.IsDir } | Select-Object -First 1
+    $match = $pool | Where-Object { $_.IsDir } | Select-Object -First 1
   }
+  if ($match) { $claimed[$match.Name] = $true }
   $status = if ($r.StillExists) { 'FAILED-STILL-THERE' } elseif ($match) { 'RECYCLED' } else { 'PERMANENT-DELETE' }
   $out += [pscustomobject]@{
     id = $r.Id; path = $r.Path; status = $status
