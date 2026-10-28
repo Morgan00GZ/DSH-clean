@@ -105,10 +105,10 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 
 ### agent 模式（`--agent`）
 
-**最多两行**。第一行是稳定契约：
+**只读第一行和最后一行**。第一行是稳定契约：
 
 ~~~
-PURITY v0.1.0 dsh=44.7.0 roots=7 files=41208 changed=12 keep=41002 cache=186 residue=3/1.2GB unknown=4 locked=0 next=review
+PURITY v0.0.0-dev dsh=44.7.0 roots=12 files=51911 residue=7/553.1MB unknown=0 sessions=51/38.3MB purity=3 plugins=266/1 patch=1/0 probe=+3/0 next=review
 ~~~
 
 - 字段名、顺序固定；**新增字段只能追加到行尾**
@@ -119,6 +119,12 @@ PURITY v0.1.0 dsh=44.7.0 roots=7 files=41208 changed=12 keep=41002 cache=186 res
 
 ~~~
 ACTION 4 unknown entries pending; run "review" or answer by id
+~~~
+
+**最后一行永远是报告路径**，agent 在回复末尾原样贴给用户，别让他自己去翻目录：
+
+~~~
+REPORT C:\Users\User\AppData\Local\dsh-clean\reports\20261028-130518\report.md
 ~~~
 
 ### JSON 模式（`--json`）
