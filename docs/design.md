@@ -108,6 +108,8 @@ find-dsh  ->  roots.json          发现安装 / 数据 / AppData / 工作区
 3. **结构判据** `rules.json`：孤儿 / 悬空 / 被取代 / 空目录 / 临时备份 / 停滞
 4. **都不中 → UNKNOWN**：显式入队，不静默丢弃。第一轮未知，你一句话裁决后进判例库
 
+归属还有一条向下看的判据：顶层目录本身不是宿主基础设施、也不是插件名，但它**里面（2~3 层内）装着与已装插件同名的目录**时，整块归属那个插件。典型例子是插件的运行状态目录 `state\desktop\<插件名>\`，外层 `state` 不该报「无法归属」。
+
 标签只有五个：`KEEP`、`CACHE`、`RESIDUE`、`UNKNOWN`、`LOCKED`。
 归属 `owner`：`host` / `plugin:<name>` / `cache` / `workspace` / `unknown`。
 

@@ -81,6 +81,7 @@
 - 新增 `unjudge`：撤一条或 `--all` 全撤
 - 判例随扫描续命：还在的刷新 `lastSeen`，路径消失超过 90 天标 `stale`；判例库只记人做过的决定，不做推断
 - 报告新增「判例库」段，`--agent` 加 `known=N`，`--section=known` 可单看
+- 归属判据补一条：顶层目录里若（2~3 层内）装着与已装插件同名的目录，整块归给那个插件——插件自己的 `state\desktop\<插件名>\` 不再被报成「无法归属」
 - 实测：判 `td:mystery` 为 KEEP 后未知项 3→2；判 `td:keep` 为 CACHE 后未知项再降；判 `td:mystery` 为 RESIDUE 后进清单（判据 judged）
 
 ### 规划中
