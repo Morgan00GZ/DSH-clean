@@ -25,13 +25,11 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
   ```
   可用段名：`residue` 残留 / `plugins` 插件包 / `sessions` 会话 / `folders` 相关文件夹 / `purity` 纯净度 / `top` 顶层目录 / `unknown` 未归类 / `patches` 已知改动。跑一次 `--section` 只会多花一两百 token；`--json` 或整份 report.md 是几千到几万。
 
-**汇报最后一行给出报告文件**。规则只有一条：路径里有空格，Markdown 链接的地址必须用尖括号包起来，否则客户端只把空格前那截当链接、点开是坏的：
+**汇报最后给报告文件，首选文件卡**：调用 `present` 把 `report.md` 交给用户（`description` 写一句「最近一次扫描的完整报告」）。用户偏好这种，它不用经过 Markdown 解析、一定点得开。
+
+`present` 不可用时退回文字链接，两条规矩：路径从扫描输出的 `REPORT` 那一行照抄（反斜杠保留、不要自己拼）；**路径含空格，地址必须用尖括号包起来**，否则客户端只认空格前那截、点开是坏的：
 
     [打开完整报告：report.md](<D:\DeepSeek Harness\DSH-GitWorkspace\DSH-clean\Temp\dsh-clean\reports\20261028-122013\report.md>)
-
-路径从扫描输出的 `REPORT` 那一行照抄，反斜杠保留、不要自己拼；有空格就加 `<>`，没有空格加不加都行。
-
-如果 `present` 工具可用，优先用它把 `report.md` 作为文件卡直接给用户（比手写链接更稳），文字里再附一条上面的链接。
 
 **不要**主动把 report.md 整份读进上下文（约 13KB ≈ 4k token）—— 用户追问哪块就用上面那条 `--section=`。
 
