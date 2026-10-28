@@ -19,6 +19,11 @@
     "dsh-service-usage-index.json",
     "last-run.json"
   ],
+  "vendorLeftover": [
+    "7zip-installer-COPYING.txt",
+    "7zip-installer-LICENSE.txt",
+    "7zip-installer-LICENSE.7z.txt"
+  ],
   "prune": [
     ".git",
     "node_modules/.cache"

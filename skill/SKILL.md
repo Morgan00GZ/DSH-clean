@@ -47,6 +47,18 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 - 安装目录上极少数偏离（< 0.5%）通常是安装包自带的静态文件，不要当成篡改来吓唬用户。
 - `patch=在位/异常`：用户自己认可的手工改动。异常数 > 0 时说明「补丁被升级或重装覆盖了」，提醒他重打，不要当成篡改。
 
+## 校验（客户端 vs 安装包，只有用户要求才跑）
+
+用户问「客户端有没有被动过 / 和我们官方安装包对不对得上」时才跑 `verify`。平时 scan 自带基线的 mtime+大小闸门，已经够回答大部分「被改过没」。
+
+```
+{{DSH_CLEAN_CMD}} verify --agent
+{{DSH_CLEAN_CMD}} verify --upstream=<手动解压的安装包目录>   # 最稳，不 spawn 外部进程
+{{DSH_CLEAN_CMD}} verify --installer=<官方安装包.exe>        # 自动 7-Zip 解包，需宽松沙箱
+```
+
+读 `INTEGRITY dsh=… baseline=… upstream=…` 那行：`baseline=ok` 说明时间大小全对上、没读盘；`upstream=same N` 说明与官方安装包一致 N 个文件。差异里「只在本机」的 `7zip-installer-*` 与 `Uninstall *.exe` 是合法安装产物，不是篡改。
+
 ## probe（已知根之外还漏了谁）
 
 - `probe=+新找到/疑似`：`+` 后面是有证据、已经纳入扫描的目录数（例如插件把数据写在 `~/.mnemon` 这种名字里不带 dsh 的地方）；`/` 后面是有弱线索、只列在报告里的疑似目录数。

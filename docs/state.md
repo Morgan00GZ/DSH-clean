@@ -12,7 +12,7 @@
 <工作区>\Temp\dsh-clean\
   roots.json              根目录登记表
   inventory.json          最近一次完整快照
-  baseline-install.json   安装目录哈希基线（P1 起）
+  baseline.json            安装目录哈希基线（P1 起）
   known.json              本机判例库
   patches.json            用户认可的改动（补丁）：路径 + sha512 + 备注
   roster.json             插件名册历史：谁什么时候装的、什么时候消失的
@@ -28,6 +28,16 @@
       pending.md          待确认清单（中文，人看）
       run.json            本次运行的元数据（耗时、版本、参数）
 ```
+
+## baseline.json
+
+安装目录的哈希基线（TOFU，本机首次信任，不是官方签名）。verify 或每次 scan 都会用它核对客户端是否被动过。
+
+值格式 `size|hash|mtimeMs`（hash 为 sha256 的 base64url）。只在首次或 `verify --rebase` 时全量算一次；之后用 mtime+大小当闸门，对得上就完全不读文件，对不上才哈希确认。约 7800 个文件，整张表约 1MB。
+
+字段：`installDir`、`dshVersion`（建基线时的客户端版本）、`createdAt`、`files`（rel → `size|hash|mtimeMs`）、`count`、`failed`。
+
+客户端版本变了（`dshVersion` 不符）会提示 `version-changed`，建议 `verify --rebase`。
 
 ## apply-log.jsonl
 

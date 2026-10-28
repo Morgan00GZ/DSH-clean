@@ -23,7 +23,7 @@ dsh-clean.cmd <command> [options]
 | `scan` | P0 | 发现全部相关目录、快照、归类、与上次和基线对比、写报告 | 只写 state 与 reports |
 | `review` | P1 | 把待清理项列成带编号的中文清单，**不删任何东西**（等价于 `apply` 不带 `--yes`） | 只读 |
 | `apply` | P1 | 按编号把文件送进 Windows 回收站；不加 `--yes` 时只列清单 | 移动文件（进回收站） |
-| `verify` | P1 | 安装目录一致性校验（基线哈希 + 上游 `latest.yml`） | 写 baseline |
+| `verify` | P1 | 安装目录一致性校验：TOFU 基线 + 对照官方安装包（自动解包或手动`--upstream`目录） | 写 baseline |
 | `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR | 写 data |
 
 ## accept
@@ -36,7 +36,7 @@ dsh-clean.cmd accept "C:\\Users\\User\\.dsh\\profiles\\desktop\\node_modules\\@n
 
 之后每次 scan 会多算一次哈希，三种结局见 [state.md](state.md) 的 patches.json 一节。
 
-已实现：`scan` / `review` / `apply` / `accept` / `unaccept` / `install` / `uninstall` / `version`。`verify`、`export-learning` 仍是占位，调用时提示「该命令将在 Pn 提供」。
+已实现：`scan` / `review` / `apply` / `accept` / `unaccept` / `verify` / `install` / `uninstall` / `version`。`export-learning` 仍是占位，调用时提示「该命令将在 Pn 提供」。
 
 ## 部署（install / uninstall）
 
@@ -82,6 +82,26 @@ dsh-clean.cmd apply --tier=A --yes                       :: ② 或者按档清
 
 退出码：`0` 全部进箱或没有要清的；`2` 有项没进箱；`3` 沙箱挡着 / 找不到运行时；`4` 回收站不可写（未删任何东西）。
 
+## 校验（verify）
+
+检查客户端安装目录有没有被动过。两步分开做，平时日常 `scan` 用基线的 mtime+大小闸门，对得上就零 IO；真要对账才跑 `verify`。
+
+```
+dsh-clean.cmd verify
+dsh-clean.cmd verify --rebase          # 重建基线（首次或客户端升级后）
+dsh-clean.cmd verify --upstream=<手动解压目录>
+dsh-clean.cmd verify --installer=<官方安装包.exe>
+```
+
+三档结论：
+- `与基线一致`：mtime+大小全对上，没读盘。purity 计为 0。
+- `--upstream <目录>`：你把官方安装包手动解压（7-Zip 解 exe，再解里面的 `$PLUGINSDIR/app-64.7z`）后指向它比对。不 spawn 外部进程，永远可用。
+- `--installer <exe>`：程序自己用 7-Zip 解包再比对。需要本机装了 7-Zip；且自动解包要在**宽松沙箱**下跑（受限沙箱 spawn 外部进程会被拦）。
+
+输出会列出 一致 / 不同 / 只在包里 / 只在本机。只在本机的多是合法安装产物（`7zip-installer-*`、`Uninstall *.exe`），不算脏。基线细节见 [state.md](state.md) 的 baseline.json 一节。
+
+退出码：`0` 一致；`1` 有基线不一致（改/增/少）；`3` 缺安装目录或读不了基线。
+
 ## 交互模型（三条通道）
 
 | 通道 | 场景 | 长什么样 |
@@ -109,8 +129,10 @@ dsh-clean.cmd apply --tier=A --yes                       :: ② 或者按档清
 | `--tier A` | `apply` | 按档处理（A = 明确残留，清错也能从回收站还原） |
 | `--all` | `apply` | 处理清单里全部残留项（不含「未归类」） |
 | `--plan <file>` | `apply` | 用指定的历史 `plan.json`，默认用最近一次扫描 |
-| `--upstream` | `verify` | 联网读取 `latest.yml` 做安装包比对 |
-| `--accept-patch <file>` | `verify` | 把当前哈希登记为「已批准补丁」 |
+| `--rebase` | `verify` | 忽略旧基线，重新全量算一次哈希重建基线 |
+| `--upstream <目录>` | `verify` | 用一个手动解压出的安装包目录做比对（不 spawn 外部进程，最稳） |
+| `--installer <exe>` | `verify` | 用 7-Zip 自动解包官方安装包再比对（需要已装 7-Zip；自动解包在受限沙箱下可能拉不起来） |
+| `--agent` | `verify` | 输出一行机读摘要（`INTEGRITY dsh=… baseline=… upstream=…`） |
 | `--install-dir <path>` | `scan` | 手动指定 DSH 安装目录（注册表与默认位置都失败时用） |
 | `--project` | `install` | 装到当前工作区的 `.dsh/skills`，而不是用户级目录 |
 | `--purge` | `uninstall` | 连状态目录与报告一起删（默认保留） |

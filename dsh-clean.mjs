@@ -6,6 +6,7 @@ import { renderHuman, renderAgent, renderJson, renderSection } from "./lib/repor
 import { install, uninstall, defaultStateDir } from "./lib/install.mjs";
 import { acceptPatch, forgetPatch } from "./lib/patches.mjs";
 import { runApply } from "./lib/apply.mjs";
+import { runVerify } from "./lib/verify.mjs";
 import { VERSION } from "./lib/version.mjs";
 
 const APP_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -16,6 +17,7 @@ const HELP = [
   "用法：dsh-clean.cmd <命令> [选项]",
   "",
   "  scan        扫描并生成报告（不删任何东西）",
+  "  verify      校验安装目录有没有被改动（对照本机基线 / 官方安装包）",
   "  review      列待清理清单，带编号（不删任何东西）",
   "  apply       按编号把东西送进回收站（要 --yes 才真删）",
   "  accept      把一处改动记成「你自己改的」，以后不算脏（要带文件路径）",
@@ -33,6 +35,13 @@ const HELP = [
   "  --full             重新发现根目录",
   "  --state-dir=<路径> 覆盖状态目录",
   "  --install-dir=<路径> 手动指定 DSH 安装目录",
+  "",
+  "verify 选项：",
+  "  --rebase           重建基线（客户端更新过之后用这个）",
+  "  --upstream=<目录>  和「解包后的官方安装包」逐文件对账",
+  "  --installer=<exe>  自动用 7-Zip 解包安装包再对账（本机要有 7-Zip）",
+  "  --agent            输出一行机读摘要",
+  "  --state-dir=<路径> 覆盖状态目录",
   "",
   "apply 选项：",
   "  --ids=1,3          只处理这几个编号",
@@ -119,6 +128,18 @@ try {
       all: opt.has("all"),
       yes: opt.has("yes") && cmd !== "review",
       planPath: opt.val("plan") || null,
+    });
+    console.log(lines.join("\n"));
+    process.exitCode = code;
+  } else if (cmd === "verify") {
+    const stateDir = opt.val("state-dir") || defaultStateDir();
+    const { lines, code } = await runVerify({
+      stateDir,
+      appDir: APP_DIR,
+      rebase: opt.has("rebase"),
+      upstream: opt.val("upstream") || null,
+      installer: opt.val("installer") || null,
+      agent: opt.has("agent"),
     });
     console.log(lines.join("\n"));
     process.exitCode = code;
