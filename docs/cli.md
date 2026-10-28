@@ -21,8 +21,8 @@ dsh-clean.cmd <command> [options]
 | `accept` | P1 | 把一处手工改动记成「用户认可」，之后不算脏 | 写 patches.json |
 | `unaccept` | P1 | 撤销记录（带路径或 --all） | 同上 |
 | `scan` | P0 | 发现全部相关目录、快照、归类、与上次和基线对比、写报告 | 只写 state 与 reports |
-| `review` | P2 | 把待确认项整理成中文清单（默认写文件，可选窗口内编号问答），裁决写入判例库 | 写 known.json |
-| `apply` | P2 | 按计划与裁决把文件移入回收站 | 移动文件 |
+| `review` | P1 | 把待清理项列成带编号的中文清单，**不删任何东西**（等价于 `apply` 不带 `--yes`） | 只读 |
+| `apply` | P1 | 按编号把文件送进 Windows 回收站；不加 `--yes` 时只列清单 | 移动文件（进回收站） |
 | `verify` | P1 | 安装目录一致性校验（基线哈希 + 上游 `latest.yml`） | 写 baseline |
 | `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR | 写 data |
 
@@ -36,7 +36,7 @@ dsh-clean.cmd accept "C:\\Users\\User\\.dsh\\profiles\\desktop\\node_modules\\@n
 
 之后每次 scan 会多算一次哈希，三种结局见 [state.md](state.md) 的 patches.json 一节。
 
-P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时提示「该命令将在 Pn 提供」。
+已实现：`scan` / `review` / `apply` / `accept` / `unaccept` / `install` / `uninstall` / `version`。`verify`、`export-learning` 仍是占位，调用时提示「该命令将在 Pn 提供」。
 
 ## 部署（install / uninstall）
 
@@ -55,6 +55,32 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 `uninstall` 按安装记录逐项删除，删除后校验技能目录已不在，避免留下「孤儿技能」——那正是本工具要检查的那类残留。
 
 默认**不动**状态目录与历史报告（里面是你的判例库）；要一起清就加 `--purge`。
+
+## 清理（review / apply）
+
+三步，缺一不可：
+
+~~~bat
+dsh-clean.cmd review                                     :: ① 列清单（带编号，不删）
+dsh-clean.cmd apply --ids=1,3 --yes                      :: ② 清这几项
+dsh-clean.cmd apply --tier=A --yes                       :: ② 或者按档清
+~~~
+
+编号来自最近一次 `scan` 写下的 `plan.json`，所以 `review` 之前必须先扫过一次。
+
+**删除一定走回收站**，而且会逐项核实。原因（2026-10-14 实测）：DSH 的文件沙箱会拒绝写工作区外路径，而回收站 `C:\$Recycle.Bin\<SID>` 就在工作区外；此时 Windows 会把「删到回收站」**静默降级成永久删除**，而且返回值骗人（`SHFileOperation` + `FOF_ALLOWUNDO` 仍返回 0，`fAnyOperationsAborted` 也是 false）。所以 `lib/recycle.ps1` 是三步：
+
+1. 先自检回收站目录可写 —— 不可写就一个都不删（退出码 4）
+2. 再删（`SHFileOperation`，`FO_DELETE` + `FOF_ALLOWUNDO`）
+3. 删后去回收站比对新增的 `$R` 条目，逐项判定 `RECYCLED` / `PERMANENT-DELETE` / `FAILED-STILL-THERE`
+
+`lib/recycle.ps1` 必须带 UTF-8 BOM（本机 pwsh 实为 Windows PowerShell 5.1，没有 BOM 会按 GBK 读，脚本行为会莫名其妙）；`lib/recycle.mjs` 每次调用前会自愈 BOM。
+
+**必须放宽沙箱**：`apply --yes` 要从 Node 里启 PowerShell，沙箱内会拿到 `EPERM`，此时工具**什么都不删**并明确告诉你原因（退出码 3）。在对话里请让 agent 用 `sandbox_permissions=danger-full-access` 重跑；自己操作则双击 `apply.cmd`（会先列清单、再问编号）。
+
+每次真清理都会往 `<state>\apply-log.jsonl` 追加一行台账（见 [state.md](state.md)），清了什么、进了哪个回收站条目都留着。
+
+退出码：`0` 全部进箱或没有要清的；`2` 有项没进箱；`3` 沙箱挡着 / 找不到运行时；`4` 回收站不可写（未删任何东西）。
 
 ## 交互模型（三条通道）
 
@@ -78,10 +104,11 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 | `--no-color` | 全部 | 关闭 ANSI 颜色（重定向时自动关闭） |
 | `--full` | `scan` | 忽略 `roots.json`，重新做一次发现 |
 | `--only <class>` | `scan` | 只显示某类，如 `--only residue,unknown` |
-| `--dry-run` | `apply` | 默认开启；显式 `--no-dry-run` 才真正移动 |
-| `--ids 1,3,5` | `apply` | 按计划编号执行 |
-| `--tier A` | `apply` | 按档批量执行（仅 A 档允许） |
-| `--plan <file>` | `apply` | 指定历史计划文件 |
+| `--yes` | `apply` | 确认执行。不加就是「只看不动」，一个字节都不删 |
+| `--ids 1,3,5` | `apply` | 只处理这几个编号 |
+| `--tier A` | `apply` | 按档处理（A = 明确残留，清错也能从回收站还原） |
+| `--all` | `apply` | 处理清单里全部残留项（不含「未归类」） |
+| `--plan <file>` | `apply` | 用指定的历史 `plan.json`，默认用最近一次扫描 |
 | `--upstream` | `verify` | 联网读取 `latest.yml` 做安装包比对 |
 | `--accept-patch <file>` | `verify` | 把当前哈希登记为「已批准补丁」 |
 | `--install-dir <path>` | `scan` | 手动指定 DSH 安装目录（注册表与默认位置都失败时用） |

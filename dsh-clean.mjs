@@ -5,6 +5,7 @@ import { runScan } from "./lib/scan.mjs";
 import { renderHuman, renderAgent, renderJson, renderSection } from "./lib/report.mjs";
 import { install, uninstall, defaultStateDir } from "./lib/install.mjs";
 import { acceptPatch, forgetPatch } from "./lib/patches.mjs";
+import { runApply } from "./lib/apply.mjs";
 import { VERSION } from "./lib/version.mjs";
 
 const APP_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -15,6 +16,8 @@ const HELP = [
   "用法：dsh-clean.cmd <命令> [选项]",
   "",
   "  scan        扫描并生成报告（不删任何东西）",
+  "  review      列待清理清单，带编号（不删任何东西）",
+  "  apply       按编号把东西送进回收站（要 --yes 才真删）",
   "  accept      把一处改动记成「你自己改的」，以后不算脏（要带文件路径）",
   "  unaccept    撤销记录（带路径，或 --all）",
   "  install     部署程序与技能到本机",
@@ -30,6 +33,14 @@ const HELP = [
   "  --full             重新发现根目录",
   "  --state-dir=<路径> 覆盖状态目录",
   "  --install-dir=<路径> 手动指定 DSH 安装目录",
+  "",
+  "apply 选项：",
+  "  --ids=1,3          只处理这几个编号",
+  "  --tier=A           按档位处理（A=明确残留、可还原；B=多半没用但建议先看）",
+  "  --all              处理清单里全部残留项",
+  "  --yes              确认执行（不加只列清单）",
+  "  --plan=<路径>      指定 plan.json（默认用最近一次扫描）",
+  "  注意：真删除要在放宽沙箱（danger-full-access）下跑，否则一个都不删。",
   "",
   "install 选项：",
   "  --project          技能装到当前工作区 .dsh\\skills",
@@ -99,6 +110,18 @@ try {
       const n = forgetPatch(stateDir, target ? path.resolve(target) : null);
       console.log(n ? "已撤销 " + n + " 条记录" : "没有匹配的记录");
     }
+  } else if (cmd === "apply" || cmd === "review") {
+    const stateDir = opt.val("state-dir") || defaultStateDir();
+    const { lines, code } = runApply({
+      stateDir,
+      ids: opt.val("ids") || "",
+      tier: opt.val("tier") || "",
+      all: opt.has("all"),
+      yes: opt.has("yes") && cmd !== "review",
+      planPath: opt.val("plan") || null,
+    });
+    console.log(lines.join("\n"));
+    process.exitCode = code;
   } else if (cmd === "scan") {
     const stateDir = opt.val("state-dir") || defaultStateDir();
     const { ctx, code } = await runScan({ stateDir, appDir: APP_DIR, full: opt.has("full"), installDir: opt.val("install-dir") || null, argv: rest });

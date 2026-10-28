@@ -17,6 +17,9 @@
   patches.json            用户认可的改动（补丁）：路径 + sha512 + 备注
   roster.json             插件名册历史：谁什么时候装的、什么时候消失的
   probe-cache.json        插件代码点名了哪些目录（按插件版本缓存，避免重复读文件）
+  sizes.json              每个顶层目录上次的体积（算「这次多了多少」）
+  last-run.json           最近一次运行的一行摘要 + 报告路径
+  apply-log.jsonl         清理台账：什么时候把什么送进了回收站（一行一条）
   install.json            安装记录（程序/技能的实际落地路径与版本）
   reports\
     20261027-215812\
@@ -25,6 +28,16 @@
       pending.md          待确认清单（中文，人看）
       run.json            本次运行的元数据（耗时、版本、参数）
 ```
+
+## apply-log.jsonl
+
+每执行一次真清理（`apply … --yes`）追加一行，不覆盖、不回滚：
+
+~~~json
+{"at":1761000000000,"ok":true,"items":[{"id":1,"path":"C:\\Users\\User\\AppData\\Local\\@deepseek-aidsh-desktop-updater\\installer.exe","bytes":289406976,"status":"RECYCLED","bin":"$R3PYQ8U.exe"}]}
+~~~
+
+`status` 取值：`RECYCLED` 已进回收站、`PERMANENT-DELETE` 没进箱（被永久删了，脚本会报警）、`FAILED-STILL-THERE` 还在原地、`MISSING` 本来就不在了。`bin` 是回收站里的条目名（`$R…`），要还原时按它找。
 
 ## patches.json
 
