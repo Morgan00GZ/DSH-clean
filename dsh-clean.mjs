@@ -5,7 +5,8 @@ import { runScan } from "./lib/scan.mjs";
 import { renderHuman, renderAgent, renderJson, renderSection } from "./lib/report.mjs";
 import { install, uninstall, defaultStateDir } from "./lib/install.mjs";
 import { acceptPatch, forgetPatch } from "./lib/patches.mjs";
-import { runApply } from "./lib/apply.mjs";
+import { runApply, latestPlan } from "./lib/apply.mjs";
+import { recordJudgment, forgetJudgment, locate } from "./lib/known.mjs";
 import { runVerify } from "./lib/verify.mjs";
 import { VERSION } from "./lib/version.mjs";
 
@@ -20,6 +21,8 @@ const HELP = [
   "  verify      校验安装目录有没有被改动（对照本机基线 / 官方安装包）",
   "  review      列待清理清单，带编号（不删任何东西）",
   "  apply       按编号把东西送进回收站（要 --yes 才真删）",
+  "  judge       把一处判定记进判例库，以后扫描不再重复问（要带路径或清单编号）",
+  "  unjudge     撤销判例（带路径或编号，或 --all）",
   "  accept      把一处改动记成「你自己改的」，以后不算脏（要带文件路径）",
   "  unaccept    撤销记录（带路径，或 --all）",
   "  install     部署程序与技能到本机",
@@ -53,6 +56,14 @@ const HELP = [
   "",
   "install 选项：",
   "  --project          技能装到当前工作区 .dsh\\skills",
+  "",
+  "judge 选项：",
+  "  --as=KEEP|CACHE|RESIDUE|UNKNOWN  怎么判（KEEP=保留别动、CACHE=缓存、RESIDUE=残留可清）",
+  "  --note=\"一句话\"     记下为什么这么判（会显示在报告里）",
+  "  --owner=host|plugin:名字  归属（可不填）",
+  "  --container|--file  强制按目录 / 按文件记（默认看磁盘上是文件还是目录）",
+  "  --state-dir=<路径>  覆盖状态目录",
+  "  例子：dsh-clean.cmd judge 3 --as=KEEP --note=\"这是某插件自己的缓存\"",
   "",
   "accept 选项：",
   "  --note=\"为什么改\"   一句话备注，扫描报告里会显示",
@@ -131,6 +142,55 @@ try {
     });
     console.log(lines.join("\n"));
     process.exitCode = code;
+  } else if (cmd === "judge" || cmd === "unjudge") {
+    const stateDir = opt.val("state-dir") || defaultStateDir();
+    const target = rest.find((a) => !a.startsWith("--"));
+    if (cmd === "unjudge" && opt.has("all")) {
+      const n = forgetJudgment(stateDir, null);
+      console.log(n ? "已撤销全部 " + n + " 条判例" : "判例库本来就是空的");
+    } else if (!target) {
+      console.error("用法：dsh-clean.cmd judge <路径或清单编号> --as=KEEP|CACHE|RESIDUE [--note=\"为什么\"]");
+      process.exitCode = 3;
+    } else {
+      let item = null;
+      if (/^[0-9]+$/.test(target)) {
+        const plan = latestPlan(stateDir);
+        const it = plan ? (plan.doc.items || []).find((x) => Number(x.id) === Number(target)) : null;
+        if (!it) {
+          console.error("最近一次清单里没有编号 " + target + "。先跑 scan / review 看看编号。");
+          process.exitCode = 3;
+        } else {
+          item = { rootId: it.rootId, rel: it.path, level: it.class === "UNKNOWN" ? "container" : "file" };
+        }
+      } else {
+        const loc = locate(stateDir, target);
+        if (!loc) {
+          console.error("这个路径不在已记录的 DSH 目录里：" + path.resolve(target) + "\n先跑一次 scan，或确认路径没写错。");
+          process.exitCode = 3;
+        } else item = { rootId: loc.rootId, rel: loc.rel, level: loc.level };
+      }
+      if (item) {
+        if (opt.has("container")) item.level = "container";
+        if (opt.has("file")) item.level = "file";
+        if (cmd === "unjudge") {
+          const n = forgetJudgment(stateDir, item);
+          console.log(n ? "已撤销 " + n + " 条判例" : "没有匹配的判例");
+        } else {
+          const cls = String(opt.val("as") || "").toUpperCase();
+          if (!cls) {
+            console.error("要带 --as=KEEP|CACHE|RESIDUE|UNKNOWN（KEEP=保留别动、CACHE=缓存、RESIDUE=残留可清）");
+            process.exitCode = 3;
+          } else {
+            const info = recordJudgment(stateDir, {
+              rootId: item.rootId, rel: item.rel, level: item.level,
+              class: cls, owner: opt.val("owner") || "", tier: opt.val("tier") || "", reason: opt.val("note") || "",
+            });
+            console.log("已记入判例库：" + info.key + " → " + cls + "（" + (item.level === "container" ? "整个目录" : "单个文件") + "）");
+            console.log("以后扫描会按这个判定走，不再重复问。撤销：dsh-clean.cmd unjudge " + item.rootId + ":" + item.rel);
+          }
+        }
+      }
+    }
   } else if (cmd === "verify") {
     const stateDir = opt.val("state-dir") || defaultStateDir();
     const { lines, code } = await runVerify({

@@ -193,29 +193,43 @@
 ```json
 {
   "schema": 1,
-  "owners": {
-    "guardian": { "owner": "host", "class": "KEEP",
-                  "note": "宿主启动名册预检缓存，仍在写入" }
-  },
   "judged": {
-    "dsh-config-manager/rollback-points/index.v2.backup.json": {
-      "class": "RESIDUE", "tier": "A",
-      "reason": "现役 index.json 更晚，此为 10-15 陈旧全量快照",
-      "at": 1761574800000
-    }
+    "data:mystery": { "class": "KEEP", "reason": "某插件的缓存", "at": 1793188994176, "lastSeen": 1793189112138 }
   },
-  "counters": { "scans": 12, "lastScan": 1761574800000 }
+  "files": {
+    "data:plugin-x/usage-records.json.bak": { "class": "RESIDUE", "tier": "A", "reason": "确认没用", "at": 1793189110234, "lastSeen": 1793189110234 }
+  }
 }
 ```
 
+两种粒度：
+
+- `judged` 按**顶层目录**记，键是 `根id:目录名`。判了整块以后，里面所有文件都不再被结构判据重复挑出来。
+- `files` 按**具体文件**记，键是 `根id:相对路径`（正斜杠）。
+
 合并规则：
 
-1. `judged` 命中即用，不问第二次
-2. 未命中则查 `knowledge.base` 的 `owners` 与 `patterns`
-3. 再未命中走 `rules.json` 的结构判据
-4. 全不中 → UNKNOWN
+1. `judged` 命中即用，不问第二次；判成 RESIDUE 的整块目录直接进清理清单（判据写 `judged`）
+2. `files` 命中：KEEP 直接跳过、CACHE 计入缓存、RESIDUE 进清单
+3. 未命中则查 `knowledge.base` 的 `hostOwned` 与插件名册
+4. 再未命中走 `rules.json` 的结构判据
+5. 全不中 → UNKNOWN
 
-路径消失的判例不删除，90 天后标 `stale`——防止「删了又装回来」时重新问一遍。
+判例只由 `judge` / `unjudge` 两个命令写，不自作推断。每次 scan 会给还在的判例续 `lastSeen`；路径消失超过 90 天标 `stale`——防止「删了又装回来」时重新问一遍，也防止老判例无限期压住新出现的东西。
+
+## LOCKED（正在写入，这次不判）
+
+不像 `judged` / `files` 那样落盘：每次 scan 现算。
+
+候选是本次所有待判定项（残留 + 未归类）。对每个候选间隔 900ms 抽样两次 `lstat`：
+
+- 大小或修改时间变了 → 有人正在写 → 标 LOCKED，从残留/未归类里拿掉，**不进清理清单**，报告单列「正在使用」
+- 两次都没变 → 放行，按正常判据处理
+- 抽样期间消失 → 不再报（它自己没了）
+
+目录候选看的是「修改时间 + 直接子项数」，所以目录里新增/删除文件也能抓到。全部候选共用一次等待，候选为 0 时完全不等待——正常机器的扫描耗时不受影响。
+
+门槛：最多 300 个候选（防极端情况把扫描拖住）。
 
 ## 经验回流
 

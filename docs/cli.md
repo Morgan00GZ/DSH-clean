@@ -18,6 +18,8 @@ dsh-clean.cmd <command> [options]
 |---|---|---|---|
 | `install` | P0 | 把程序部署到固定位置，并把技能装进 DSH 的技能目录 | 写 LOCALAPPDATA、`~/.dsh/skills` |
 | `uninstall` | P0 | 反向清除：程序、技能（默认保留状态与报告） | 同上 |
+| `judge` | P2 | 把一处判定记进判例库（路径或清单编号），以后扫描不再重复问 | 写 known.json |
+| `unjudge` | P2 | 撤销判例（带路径或编号，或 `--all`） | 同上 |
 | `accept` | P1 | 把一处手工改动记成「用户认可」，之后不算脏 | 写 patches.json |
 | `unaccept` | P1 | 撤销记录（带路径或 --all） | 同上 |
 | `scan` | P0 | 发现全部相关目录、快照、归类、与上次和基线对比、写报告 | 只写 state 与 reports |
@@ -36,7 +38,7 @@ dsh-clean.cmd accept "C:\\Users\\User\\.dsh\\profiles\\desktop\\node_modules\\@n
 
 之后每次 scan 会多算一次哈希，三种结局见 [state.md](state.md) 的 patches.json 一节。
 
-已实现：`scan` / `review` / `apply` / `accept` / `unaccept` / `verify` / `install` / `uninstall` / `version`。`export-learning` 仍是占位，调用时提示「该命令将在 Pn 提供」。
+已实现：`scan` / `review` / `apply` / `judge` / `unjudge` / `accept` / `unaccept` / `verify` / `install` / `uninstall` / `version`。`export-learning` 仍是占位，调用时提示「该命令将在 Pn 提供」。
 
 ## 部署（install / uninstall）
 
@@ -82,6 +84,28 @@ dsh-clean.cmd apply --tier=A --yes                       :: ② 或者按档清
 
 退出码：`0` 全部进箱或没有要清的；`2` 有项没进箱；`3` 沙箱挡着 / 找不到运行时；`4` 回收站不可写（未删任何东西）。
 
+## 判例（judge / unjudge）
+
+~~~bat
+dsh-clean.cmd judge 3 --as=KEEP --note="这是插件自己的缓存"
+dsh-clean.cmd judge "C:\Users\User\.dsh\state" --as=CACHE
+dsh-clean.cmd unjudge 3
+dsh-clean.cmd unjudge --all
+~~~
+
+`judge` 接受两种定位：**清单编号**（最近一次 `scan` / `review` 里的编号）或**绝对路径**（必须落在已记录的 DSH 目录里）。默认按磁盘实际类型决定粒度：目录记成整块（`judged`），文件记成单条（`files`）；要强制可加 `--container` / `--file`。
+
+判定四选一：
+
+| `--as` | 含义 |
+|---|---|
+| `KEEP` | 保留别动，以后别再问 |
+| `CACHE` | 缓存目录，计入缓存统计、不进清理清单 |
+| `RESIDUE` | 确认是残留，直接进清理清单（判据写 `judged`） |
+| `UNKNOWN` | 暂时不下结论，留在待确认里 |
+
+判例只记录人做过的决定，不做推断；路径消失的判例不删，90 天后标 `stale`（见 [state.md](state.md) 的 known.json 一节）。
+
 ## 校验（verify）
 
 检查客户端安装目录有没有被动过。两步分开做，平时日常 `scan` 用基线的 mtime+大小闸门，对得上就零 IO；真要对账才跑 `verify`。
@@ -118,7 +142,7 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 |---|---|---|
 | `--state-dir <path>` | 全部 | 覆盖状态目录，默认 `<当前目录>\Temp\dsh-clean`（见 state.md） |
 | `--json` | 全部 | 输出单个 JSON 对象（很大，别整个读进对话） |
-| `--section <名字>` | `scan` | 只输出报告的一段：`residue` / `plugins` / `sessions` / `folders` / `purity` / `top` / `unknown` / `patches` |
+| `--section <名字>` | `scan` | 只输出报告的一段：`residue` / `locked` / `known` / `plugins` / `sessions` / `folders` / `purity` / `top` / `unknown` / `patches` |
 | `--agent` | `scan` | 输出固定两行机读摘要 |
 | `--quiet` | 全部 | 只输出摘要，不输出区块明细 |
 | `--no-color` | 全部 | 关闭 ANSI 颜色（重定向时自动关闭） |
@@ -161,12 +185,14 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 **只读第一行和最后一行**。第一行是稳定契约：
 
 ~~~
-PURITY v0.0.0-dev dsh=44.7.0 roots=12 files=51911 residue=7/553.1MB unknown=0 sessions=51/38.3MB purity=3 plugins=266/1 patch=1/0 probe=+3/0 next=review
+PURITY v0.0.0-dev dsh=44.7.0 roots=12 files=52017 residue=0/0B unknown=0 sessions=53/41.5MB purity=0 integrity=ok plugins=266/0 patch=1/0 probe=+3/0 locked=0 known=0 next=none
 ~~~
 
 - 字段名、顺序固定；**新增字段只能追加到行尾**
 - 体积用紧凑写法（`1.2GB`），无空格
-- `next=` 取值：`scan` / `review` / `apply` / `none`（全净）
+- `next=` 取值：`review` / `none`（全净）
+- `locked=N`：本轮因「正在写入」而跳过的项数（见 state.md 的 LOCKED 一节），这些项不进清理清单
+- `known=N`：判例库条数（`judge` 记下的裁决）
 
 第二行仅在需要人决策时出现，形如：
 
