@@ -22,6 +22,13 @@
 - Electron 的 asar 虚拟 stat 已用 `original-fs` 绕过
 - 不做：任何删除动作
 
+### P0.1 - 省 token 与免放宽沙箱
+
+- 状态与报告默认改到 `<工作区>\Temp\dsh-clean\`，日常扫描不再写 `%LOCALAPPDATA%`，也就不需要放宽沙箱
+- 新 `--section <名字>`：只打印报告的一段（residue / plugins / sessions / folders / purity / top / unknown / patches），追问细节时从几千 token 降到一两百
+- 技能里的调用行改成直连运行时（`ELECTRON_RUN_AS_NODE=1 "…DeepSeek Harness.exe" "…dsh-clean.mjs"`）：套一层 `cmd` 调 `.cmd` 会静默不执行、输出全空，白烧一次模型调用
+- 技能里明确：报告要用 Markdown 链接给出（裸路径在客户端里点不开）；`--json` 不默认使用
+- 迁移：`install` 时把旧状态目录的 roots / patches / roster / probe-cache / last-run 与 reports / inventory 只补不覆盖地搬到新目录
 ### P1 - 已知改动（用户自己打的补丁）
 
 - accept <文件> --note="为什么改"：把一处手工改动记成「用户认可」，之后不再算脏；只存 sha512，不存文件内容

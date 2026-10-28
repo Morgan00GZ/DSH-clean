@@ -47,6 +47,9 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 | 程序本体 | `%LOCALAPPDATA%\dsh-clean\app\` | 删除 |
 | 技能 | `%USERPROFILE%\.dsh\skills\dsh-clean\SKILL.md`（或 `--project` 时工作区下） | 删除 |
 | 安装记录 | `%LOCALAPPDATA%\dsh-clean\install.json` | 保留到卸载完成，用于精确回滚 |
+| 状态与报告 | `<当前目录>\Temp\dsh-clean\`（可用 `--state-dir` 改） | `--purge` 时清掉 |
+
+安装后写进 SKILL.md 的调用行是**直连运行时**：`ELECTRON_RUN_AS_NODE=1 "…\DeepSeek Harness.exe" "…\app\dsh-clean.mjs"`；没探测到运行时才退回 `.cmd`。原因：从 bash 里再套一层 `cmd` / `powershell` 调 `.cmd`，进程会静默不执行（exit 0、输出全空），白白烧掉一次模型调用。
 
 `install` 是幂等的：重复运行即升级程序与技能，不会产生多份副本。
 `uninstall` 按安装记录逐项删除，删除后校验技能目录已不在，避免留下「孤儿技能」——那正是本工具要检查的那类残留。
@@ -67,8 +70,9 @@ P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时�
 
 | 选项 | 适用 | 说明 |
 |---|---|---|
-| `--state-dir <path>` | 全部 | 覆盖状态目录，默认 `%LOCALAPPDATA%\dsh-clean` |
-| `--json` | 全部 | 输出单个 JSON 对象 |
+| `--state-dir <path>` | 全部 | 覆盖状态目录，默认 `<当前目录>\Temp\dsh-clean`（见 state.md） |
+| `--json` | 全部 | 输出单个 JSON 对象（很大，别整个读进对话） |
+| `--section <名字>` | `scan` | 只输出报告的一段：`residue` / `plugins` / `sessions` / `folders` / `purity` / `top` / `unknown` / `patches` |
 | `--agent` | `scan` | 输出固定两行机读摘要 |
 | `--quiet` | 全部 | 只输出摘要，不输出区块明细 |
 | `--no-color` | 全部 | 关闭 ANSI 颜色（重定向时自动关闭） |

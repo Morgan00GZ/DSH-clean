@@ -3,8 +3,9 @@ state/
 reports/
 *.local.json
 
-# 若通过 --state-dir 把状态指到仓库内
+# 若通过 --state-dir 把状态指到仓库内（或在仓库里执行 install，状态默认落在 ./Temp）
 .dsh-clean-state/
+Temp/
 
 # 通用
 node_modules/

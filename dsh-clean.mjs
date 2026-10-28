@@ -2,7 +2,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runScan } from "./lib/scan.mjs";
-import { renderHuman, renderAgent, renderJson } from "./lib/report.mjs";
+import { renderHuman, renderAgent, renderJson, renderSection } from "./lib/report.mjs";
 import { install, uninstall, defaultStateDir } from "./lib/install.mjs";
 import { acceptPatch, forgetPatch } from "./lib/patches.mjs";
 import { VERSION } from "./lib/version.mjs";
@@ -24,7 +24,8 @@ const HELP = [
   "",
   "scan 选项：",
   "  --agent            输出两行机读摘要（给对话用）",
-  "  --json             输出 JSON",
+  "  --json             输出 JSON（很大，别整个读进对话）",
+  "  --section=<名字>   只输出报告的一段：residue / plugins / sessions / folders / purity / top",
   "  --quiet            只输出摘要",
   "  --full             重新发现根目录",
   "  --state-dir=<路径> 覆盖状态目录",
@@ -69,7 +70,7 @@ try {
   } else if (cmd === "help" || cmd === "--help") {
     console.log(HELP);
   } else if (cmd === "install") {
-    const { lines } = install({ srcDir: APP_DIR, project: opt.has("project") });
+    const { lines } = install({ srcDir: APP_DIR, project: opt.has("project"), stateDir: opt.val("state-dir") || null });
     console.log(lines.join("\n"));
   } else if (cmd === "uninstall") {
     const { lines, code } = uninstall({ purge: opt.has("purge") });
@@ -101,7 +102,9 @@ try {
   } else if (cmd === "scan") {
     const stateDir = opt.val("state-dir") || defaultStateDir();
     const { ctx, code } = await runScan({ stateDir, appDir: APP_DIR, full: opt.has("full"), installDir: opt.val("install-dir") || null, argv: rest });
+    const section = opt.val("section");
     if (opt.has("json")) console.log(renderJson(ctx));
+    else if (section) console.log(renderSection(ctx, section));
     else if (opt.has("agent")) console.log(renderAgent(ctx));
     else console.log(renderHuman(ctx));
     process.exitCode = code;

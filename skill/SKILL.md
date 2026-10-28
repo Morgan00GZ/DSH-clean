@@ -13,15 +13,25 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 {{DSH_CLEAN_CMD}} scan --agent
 ```
 
-读它输出的第一行（结论）和最后一行（`REPORT <路径>`）。
+一次就够。读它输出的第一行（结论）和最后一行（`REPORT <路径>`）。
 
-**每次汇报的最后一行，都要把报告文件路径原样贴给用户**，让他能直接点开，不要让他自己去翻 `%LOCALAPPDATA%\dsh-clean\reports\...` 那么多层文件夹：
+**这一步只花几百 token，不要去改命令行**：
 
-    报告：C:\Users\...\reports\20261028-122013\report.md
+- 就按上面这行原样跑，**不要**用 `cmd /c`、`cmd //c`、`powershell -File …dsh-clean.cmd` 再包一层 —— 包了之后进程会静默不执行、输出全空（exit 0 假成功），白跑一次模型调用。
+- 参数只有 `scan --agent`。不要加 `--json`（那是整包 JSON，几万 token）。
+- 只有用户追问某一块细节时，才跑第二条：
+  ```
+  {{DSH_CLEAN_CMD}} scan --section=residue
+  ```
+  可用段名：`residue` 残留 / `plugins` 插件包 / `sessions` 会话 / `folders` 相关文件夹 / `purity` 纯净度 / `top` 顶层目录 / `unknown` 未归类 / `patches` 已知改动。跑一次 `--section` 只会多花一两百 token；`--json` 或整份 report.md 是几千到几万。
 
-**不要**主动把 report.md 读进上下文（太贵）—— 除非用户追问细节，或 residue>0 / unknown>0 需要解释。
+**汇报最后一行给出报告文件的链接**，用 Markdown 链接，用户才点得开（直接写裸路径在客户端里不可点）：
 
-需要细节时再跑一次 `... scan --json`，并且只提取你真正要讲的那几个字段。
+    [打开完整报告：report.md](C:\<工作区>\Temp\dsh-clean\reports\20261028-122013\report.md)
+
+路径从扫描输出的 `REPORT` 那一行照抄，只把反斜杠原样保留、不要自己拼。
+
+**不要**主动把 report.md 整份读进上下文（约 13KB ≈ 4k token）—— 用户追问哪块就用上面那条 `--section=`。
 
 ## 怎么汇报
 
@@ -53,6 +63,8 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 - 不修改、不移动、不删除任何文件；不读取文件内容（工具只统计大小与时间）。
 - 用户没要求时不要重复扫描。
+- 退出码不是失败：`1` = 有残留、`2` = 有未归类项等你确认、`0` = 干净；只有 `3` 才是真出错（那时 stderr 里有一句「运行失败：…」）。别因为看到 1 就重跑或换命令。
+- 状态与报告默认都在工作区 `Temp\dsh-clean\` 下，不需要放宽沙箱；只有 install / uninstall 会写 `%LOCALAPPDATA%\dsh-clean`，那两步才可能需要放宽。
 - 若命令报「找不到 Node 运行时」，说明 DSH 安装目录异常，先把这条告诉用户，不要尝试自己修。
 
 ## 用户自己改过的东西
