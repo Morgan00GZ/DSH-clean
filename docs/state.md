@@ -8,6 +8,7 @@
   inventory.json          最近一次完整快照
   baseline-install.json   安装目录哈希基线（P1 起）
   known.json              本机判例库
+  patches.json            用户认可的改动（补丁）：路径 + sha512 + 备注
   install.json            安装记录（程序/技能的实际落地路径与版本）
   reports\
     20261027-215812\
@@ -16,6 +17,33 @@
       pending.md          待确认清单（中文，人看）
       run.json            本次运行的元数据（耗时、版本、参数）
 ```
+
+## patches.json
+
+用户自己改过的插件文件（打补丁）不该算脏，也不该在插件升级把它覆盖后悄无声息地丢掉。
+
+~~~json
+{
+  "schema": 1,
+  "items": [
+    {
+      "path": "C:\\Users\\User\\.dsh\\profiles\\desktop\\node_modules\\@njjpro\\dsh-remote-workspace\\lib\\index.js",
+      "sha512": "6b2b…（128 位十六进制）",
+      "size": 24701,
+      "note": "用户自改：dsh-remote-workspace/index.js",
+      "acceptedAt": 1793000000000
+    }
+  ]
+}
+~~~
+
+**只存哈希，不存内容。** 每次扫描对每个条目算一次 sha512（几十 KB 的文件，成本可忽略），结局有三种：
+
+| 现状 | 判定 | 报告位置 |
+|---|---|---|
+| 哈希与记录一致 | 补丁在位 | 「已知改动 N 处」 |
+| 哈希能在 pnpm 仓库里查到 | 已恢复成原件，升级或重装覆盖了补丁 | 「补丁异常」+ PATCH-LOST |
+| 两者都不匹配 | 又被别人改过 | 「补丁异常」+ 照常计脏 |
 
 状态**不在仓库内**：仓库可只读、可多处克隆、多台机器互不污染。`--state-dir` 可覆盖，便于把状态放进同步盘或测试沙箱。
 

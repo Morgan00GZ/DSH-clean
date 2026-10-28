@@ -18,11 +18,23 @@ dsh-clean.cmd <command> [options]
 |---|---|---|---|
 | `install` | P0 | 把程序部署到固定位置，并把技能装进 DSH 的技能目录 | 写 LOCALAPPDATA、`~/.dsh/skills` |
 | `uninstall` | P0 | 反向清除：程序、技能（默认保留状态与报告） | 同上 |
+| `accept` | P1 | 把一处手工改动记成「用户认可」，之后不算脏 | 写 patches.json |
+| `unaccept` | P1 | 撤销记录（带路径或 --all） | 同上 |
 | `scan` | P0 | 发现全部相关目录、快照、归类、与上次和基线对比、写报告 | 只写 state 与 reports |
 | `review` | P2 | 把待确认项整理成中文清单（默认写文件，可选窗口内编号问答），裁决写入判例库 | 写 known.json |
 | `apply` | P2 | 按计划与裁决把文件移入回收站 | 移动文件 |
 | `verify` | P1 | 安装目录一致性校验（基线哈希 + 上游 `latest.yml`） | 写 baseline |
 | `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR | 写 data |
+
+## accept
+
+~~~bat
+dsh-clean.cmd accept "C:\\Users\\User\\.dsh\\profiles\\desktop\\node_modules\\@njjpro\\dsh-remote-workspace\\lib\\index.js" --note="用户自改"
+~~~
+
+仅记哈希，不读内容、不复制文件。同一个文件再次 accept 会覆盖旧记录（哈希按当前内容重算）。
+
+之后每次 scan 会多算一次哈希，三种结局见 [state.md](state.md) 的 patches.json 一节。
 
 P0 只有 `scan` 有实现；其余命令以 `--help` 文案占位，调用时提示「该命令将在 Pn 提供」。
 

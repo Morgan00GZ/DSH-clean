@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { runScan } from "./lib/scan.mjs";
 import { renderHuman, renderAgent, renderJson } from "./lib/report.mjs";
 import { install, uninstall, defaultStateDir } from "./lib/install.mjs";
+import { acceptPatch, forgetPatch } from "./lib/patches.mjs";
 import { VERSION } from "./lib/version.mjs";
 
 const APP_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -14,6 +15,8 @@ const HELP = [
   "用法：dsh-clean.cmd <命令> [选项]",
   "",
   "  scan        扫描并生成报告（不删任何东西）",
+  "  accept      把一处改动记成「你自己改的」，以后不算脏（要带文件路径）",
+  "  unaccept    撤销记录（带路径，或 --all）",
   "  install     部署程序与技能到本机",
   "  uninstall   卸载程序与技能（状态默认保留）",
   "  version     显示版本",
@@ -29,6 +32,10 @@ const HELP = [
   "",
   "install 选项：",
   "  --project          技能装到当前工作区 .dsh\\skills",
+  "",
+  "accept 选项：",
+  "  --note=\"为什么改\"   一句话备注，扫描报告里会显示",
+  "  --state-dir=<路径>  覆盖状态目录",
   "",
   "uninstall 选项：",
   "  --purge            连状态与报告一起清掉",
@@ -68,6 +75,29 @@ try {
     const { lines, code } = uninstall({ purge: opt.has("purge") });
     console.log(lines.join("\n"));
     process.exitCode = code;
+  } else if (cmd === "accept") {
+    const target = rest.find((a) => !a.startsWith("--"));
+    if (!target) {
+      console.error("用法：dsh-clean.cmd accept <文件路径> --note=\"为什么改\"");
+      process.exitCode = 3;
+    } else {
+      const stateDir = opt.val("state-dir") || defaultStateDir();
+      const item = acceptPatch(stateDir, path.resolve(target), opt.val("note") || "");
+      console.log("已记录：" + item.path);
+      console.log("  sha512  " + item.sha512.slice(0, 16) + "…");
+      console.log("  备注    " + (item.note || "（无）"));
+      console.log("以后这处改动不再算脏；哪天插件升级把它覆盖回原件，扫描会报「补丁丢了」。");
+    }
+  } else if (cmd === "unaccept") {
+    const stateDir = opt.val("state-dir") || defaultStateDir();
+    const target = opt.has("all") ? null : rest.find((a) => !a.startsWith("--"));
+    if (!target && !opt.has("all")) {
+      console.error("用法：dsh-clean.cmd unaccept <文件路径> | --all");
+      process.exitCode = 3;
+    } else {
+      const n = forgetPatch(stateDir, target ? path.resolve(target) : null);
+      console.log(n ? "已撤销 " + n + " 条记录" : "没有匹配的记录");
+    }
   } else if (cmd === "scan") {
     const stateDir = opt.val("state-dir") || defaultStateDir();
     const { ctx, code } = await runScan({ stateDir, appDir: APP_DIR, full: opt.has("full"), installDir: opt.val("install-dir") || null, argv: rest });
