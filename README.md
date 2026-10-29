@@ -89,7 +89,7 @@ install.cmd
 人类模式（节选）：
 
 ~~~
-DSH-clean v0.0.0-dev - 2026-10-28 00:08
+DSH-clean v0.1.0 - 2026-10-28 00:08
 
 环境
   DSH 桌面端   0.2.1-rc.3
@@ -131,7 +131,7 @@ DSH 相关文件夹（8）
 agent 模式（`--agent`，固定两行以内）：
 
 ~~~
-PURITY v0.0.0-dev dsh=44.7.0 roots=8 files=53625 residue=7/553.1MB unknown=0 sessions=46/36.5MB purity=3 plugins=309/2 next=review
+PURITY v0.1.0 dsh=44.7.0 roots=8 files=53625 residue=7/553.1MB unknown=0 sessions=46/36.5MB purity=3 plugins=309/2 next=review
 ~~~
 
 ## 支持范围
