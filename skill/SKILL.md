@@ -25,9 +25,15 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
   ```
   可用段名：`residue` 残留 / `plugins` 插件包 / `sessions` 会话 / `folders` 相关文件夹 / `purity` 纯净度 / `top` 顶层目录 / `unknown` 未归类 / `patches` 已知改动。跑一次 `--section` 只会多花一两百 token；`--json` 或整份 report.md 是几千到几万。
 
-**汇报最后给报告文件，首选文件卡**：调用 `present` 把 `report.md` 交给用户（`description` 写一句「最近一次扫描的完整报告」）。用户偏好这种，它不用经过 Markdown 解析、一定点得开。
+**汇报必须给文件卡，不是文字链接**。每次扫描汇报都要调用 `present`，把 `report.md` 交出去（`description` 写一句「最近一次扫描的完整报告」）：
 
-`present` 不可用时退回文字链接，两条规矩：路径从扫描输出的 `REPORT` 那一行照抄（反斜杠保留、不要自己拼）；**路径含空格，地址必须用尖括号包起来**，否则客户端只认空格前那截、点开是坏的：
+    present({ files: [{ path: "<REPORT 那行的路径>", description: "最近一次扫描的完整报告" }] })
+
+用户明确说过：**Markdown 链接点不开、他不喜欢**，只有文件卡才行。所以：
+
+- 不要只贴一行链接就完事 —— 那等于没给。
+- 路径照抄扫描输出 `REPORT` 那一行，不要自己拼。
+- `present` 真的不可用时，才退回到尖括号包裹的链接（路径含空格必须包，否则只认空格前那截）：
 
     [打开完整报告：report.md](<D:\DeepSeek Harness\DSH-GitWorkspace\DSH-clean\Temp\dsh-clean\reports\20261028-122013\report.md>)
 
@@ -114,20 +120,20 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 绝不要用 `rm` / `del` / `Remove-Item` 代替 apply：那会永久删除，回收站里找不回来。
 
-## 收尾（报告太多 / 用户说「收拾一下」）
+## 收尾（看到 reports=N/prune 就直接做，不用问）
 
-`scan` 每跑一次攒一份报告。攒多了会自己提醒（`--agent` 行尾出现 `reports=N/prune`，人类报告多一行「收尾」）。这时跑：
+`scan` 每跑一次攒一份报告，攒多了 `--agent` 行尾会出现 `reports=N/prune`。**看到这个标记就直接跑，不要问用户、也不要先 `--dry-run`**：
 
 ```
-{{DSH_CLEAN_CMD}} prune --dry-run
+{{DSH_CLEAN_CMD}} prune --agent
 ```
 
-看它列出要收走什么，确认后去掉 `--dry-run` 再跑一次。它会：
+它会：
 
 - 历史报告只留最近 10 份（`--keep=N` 可改），其余进回收站
-- 安装目录里遗留的旧状态文件（`%LOCALAPPDATA%\dsh-clean` 下的 roots / patches / probe-cache / last-run / sizes / inventory / reports 等）先补到新状态目录、确认没丢，再收走
+- 旧状态文件（`%LOCALAPPDATA%\dsh-clean` 下的 roots / patches / probe-cache / last-run / sizes / inventory / reports 等）先补到新状态目录、确认没丢，再收走
 
-汇报一句话：「收了 N 项、腾出多少，回收站里能还原」。用户没提就别主动跑。
+全部进回收站、可还原，属于例行维护，不需要用户批准。汇报时一句话带过即可（「顺手收走了 N 份旧报告」）。`PRUNE … ok=1` 说明成功；退出码 4 才是没做成。
 
 ## 边界
 
