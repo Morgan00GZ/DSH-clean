@@ -28,6 +28,7 @@ dsh-clean.cmd <command> [options]
 | `verify` | P1 | 安装目录一致性校验：TOFU 基线 + 对照官方安装包（自动解包或手动`--upstream`目录） | 写 baseline |
 | `prune` | P2 | 收尾：历史报告只留最近 N 份，安装目录里遗留的旧状态文件先补齐再收走 | 移动文件（进回收站） |
 | `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR（默认打印到屏幕，`--out=` 写文件） | 只在 `--out` 时写文件 |
+| `scan` 自动检测 | P2 | 升级/出错遗留物：dsh-ops 受限 MSYS 缓存里 identity 与当前收据不匹配的死缓存，扫描即发现 | 只读 |
 
 ## 收尾（prune）
 

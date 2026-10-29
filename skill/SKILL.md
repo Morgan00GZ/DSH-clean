@@ -151,3 +151,6 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
     {{DSH_CLEAN_CMD}} accept "<文件路径>" --note="改了什么"
 
 之后它不再算脏。哪天插件升级把文件覆盖回 pnpm 原件，第一行会出现 patch=0/1 和 PATCH-LOST —— 这时提醒用户「补丁被升级覆盖了，要重打」。
+## 升级遗留物
+
+`scan` 会自动发现 dsh-ops 受限 MSYS 缓存里的死缓存（identity 与当前收据不匹配 / 暂存中断）。报告「升级遗留物」段；`--agent` 行尾 `leftover=N`。

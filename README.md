@@ -162,3 +162,6 @@ PURITY v0.1.0 dsh=44.7.0 roots=8 files=53625 residue=7/553.1MB unknown=0 session
 ## License
 
 MIT
+## 功能
+
+- **升级遗留物检测**：扫描自动发现 dsh-ops 受限 MSYS 缓存里的死缓存（identity 与当前收据不匹配 / 暂存中断），进入残留清单，清理走回收站。

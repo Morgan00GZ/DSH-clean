@@ -274,3 +274,7 @@ JSON 解析失败时：
 - 默认位于 `%LOCALAPPDATA%`，不进仓库（`.gitignore` 兜底）
 - `report.md` 中把 `%USERPROFILE%` 替换为 `~`
 - `export-learning` 强制脱敏，且不含文件内容
+## 升级遗留物
+
+扫描时自动检测 `~/.dsh/dsh-ops/bash-ipc/<identity>` 缓存：与当前安装的 dsh-ops 收据（`<profile>/node_modules/dsh-ops/runtime/win32-x64/bash-ipc/provenance.json`）算出的 identity 不匹配，或缓存目录名与内部 `.ops-ipc.json` 标记不一致，即为死缓存/暂存中断，进入残留清单（tier=B，rule=upgrade-leftover）。
+
