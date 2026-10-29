@@ -27,7 +27,7 @@ dsh-clean.cmd <command> [options]
 | `apply` | P1 | 按编号把文件送进 Windows 回收站；不加 `--yes` 时只列清单 | 移动文件（进回收站） |
 | `verify` | P1 | 安装目录一致性校验：TOFU 基线 + 对照官方安装包（自动解包或手动`--upstream`目录） | 写 baseline |
 | `prune` | P2 | 收尾：历史报告只留最近 N 份，安装目录里遗留的旧状态文件先补齐再收走 | 移动文件（进回收站） |
-| `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR | 写 data |
+| `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR（默认打印到屏幕，`--out=` 写文件） | 只在 `--out` 时写文件 |
 
 ## 收尾（prune）
 
@@ -216,6 +216,7 @@ PURITY v0.1.0 dsh=44.7.0 roots=12 files=52017 residue=0/0B unknown=0 sessions=53
 - `next=` 取值：`review` / `none`（全净）
 - `locked=N`：本轮因「正在写入」而跳过的项数（见 state.md 的 LOCKED 一节），这些项不进清理清单
 - `known=N`：判例库条数（`judge` 记下的裁决）
+- `reports=N/prune`：历史报告份数；超过保留数（默认 10）时带 `/prune` 提示跑 `prune`
 
 第二行仅在需要人决策时出现，形如：
 

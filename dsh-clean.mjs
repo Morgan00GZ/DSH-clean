@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { runScan } from "./lib/scan.mjs";
 import { renderHuman, renderAgent, renderJson, renderSection } from "./lib/report.mjs";
@@ -9,6 +10,7 @@ import { runApply, latestPlan } from "./lib/apply.mjs";
 import { recordJudgment, forgetJudgment, locate } from "./lib/known.mjs";
 import { runVerify } from "./lib/verify.mjs";
 import { runPrune, KEEP_DEFAULT } from "./lib/prune.mjs";
+import { buildLearning } from "./lib/export.mjs";
 import { VERSION } from "./lib/version.mjs";
 
 const APP_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -27,6 +29,7 @@ const HELP = [
   "  accept      把一处改动记成「你自己改的」，以后不算脏（要带文件路径）",
   "  unaccept    撤销记录（带路径，或 --all）",
   "  prune       收尾：旧报告只留最近几份、安装目录里的旧状态文件一并收走（都进回收站）",
+  "  export-learning  把本机判例导出成脱敏片段（可提 PR 反哺内置知识库）",
   "  install     部署程序与技能到本机",
   "  uninstall   卸载程序与技能（状态默认保留）",
   "  version     显示版本",
@@ -228,6 +231,20 @@ try {
       console.log(out.lines.join("\n"));
     }
     process.exitCode = out.ok ? 0 : 4;
+  } else if (cmd === "export-learning") {
+    const stateDir = opt.val("state-dir") || defaultStateDir();
+    const min = Math.max(1, Number(opt.val("min") || 1));
+    const doc2 = buildLearning({ stateDir, min });
+    const out = opt.val("out");
+    if (out) {
+      fs.writeFileSync(path.resolve(out), JSON.stringify(doc2, null, 2) + "\n", "utf8");
+      console.log("已导出 " + doc2.patterns.length + " 条判例（已脱敏，不含任何绝对路径）→ " + path.resolve(out));
+      if (doc2.note) console.log("  " + doc2.note);
+      process.exitCode = 0;
+    } else {
+      console.log(JSON.stringify(doc2, null, 2));
+      process.exitCode = 0;
+    }
   } else if (cmd === "scan") {
     const stateDir = opt.val("state-dir") || defaultStateDir();
     const { ctx, code } = await runScan({ stateDir, appDir: APP_DIR, full: opt.has("full"), installDir: opt.val("install-dir") || null, argv: rest });

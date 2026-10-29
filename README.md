@@ -82,7 +82,7 @@ cd DSH-clean
 install.cmd
 ~~~
 
-常用命令：`scan`（只读清查）· `review` / `apply`（清单 / 进回收站）· `judge`（记住判定）· `verify`（对照安装包）· `prune`（旧报告与旧状态收尾）· `install` / `uninstall`。完整命令契约见 [docs/cli.md](docs/cli.md)。
+常用命令：`scan`（只读清查）· `review` / `apply`（清单 / 进回收站）· `judge`（记住判定）· `verify`（对照安装包）· `prune`（旧报告与旧状态收尾）· `export-learning`（把判例导出成可提 PR 的片段）· `install` / `uninstall`。完整命令契约见 [docs/cli.md](docs/cli.md)。
 
 ## 输出长什么样
 
