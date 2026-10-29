@@ -84,8 +84,19 @@
 - 归属判据补一条：顶层目录里若（2~3 层内）装着与已装插件同名的目录，整块归给那个插件——插件自己的 `state\desktop\<插件名>\` 不再被报成「无法归属」
 - 实测：判 `td:mystery` 为 KEEP 后未知项 3→2；判 `td:keep` 为 CACHE 后未知项再降；判 `td:mystery` 为 RESIDUE 后进清单（判据 judged）
 
+### P2 - 状态与报告收尾（prune）
+
+- 新增 `prune`：历史报告按 `YYYYMMDD-HHMMSS` 排序，只留最近 10 份（`--keep=N` 可改），其余进回收站；`--dry-run` 先看清单
+- 旧状态收尾：`%LOCALAPPDATA%\dsh-clean` 里遗留的 roots / patches / roster / probe-cache / last-run / sizes / known / node-path.txt / inventory / reports，**先确认新状态目录里有（缺的先补过去）再收走旧的那份**——判例、补丁记录不会丢
+- 旧 reports 目录：新位置历史已够长就直接收；不够长先把缺的补过来
+- 扫描不自作主张收尾，只在超过保留数时提示：人类报告多一行「收尾」，`--agent` 行尾 `reports=N/prune`
+- 顺带修掉两处自产垃圾：`install` 不再创建空的 `inventory` 目录；`node-path.txt` 弃用，节点路径改从 `install.json` 读（旧文件交给 prune 收）
+- `install` 现在把仓库里所有 `*.cmd`（含 `apply.cmd`、`prune.cmd`）一并装到程序目录——此前只有 `dsh-clean.cmd` 被复制，双击入口会缺
+- 顺手清掉自产垃圾：状态目录里的空 `inventory` 目录、`tmp\recycle-list-*.json`；回收站清单文件拿到回执后即删，不再无限攒
+- 新增 `prune.cmd`：双击即用，先列清单再问一句，回车执行
+- 实测：夹具 15 份报告 + 6 个旧状态文件 + 旧 reports 目录 → 一次收走 12 项，报告留 10、旧安装根只剩 app 与 install.json；再跑一次输出「已经收拾干净」，可重复执行
+
 ### 规划中
 
-- P2 收尾：旧状态目录与旧报告的自动收尾（保留最近 10 份）
 - P3 体验：增量打磨、`export-learning`、可选 skill 外壳
 - P4 可选：只读面板（薄壳，不含扫描逻辑）

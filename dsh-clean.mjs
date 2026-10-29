@@ -3,11 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runScan } from "./lib/scan.mjs";
 import { renderHuman, renderAgent, renderJson, renderSection } from "./lib/report.mjs";
-import { install, uninstall, defaultStateDir } from "./lib/install.mjs";
+import { install, uninstall, defaultStateDir, appRoot } from "./lib/install.mjs";
 import { acceptPatch, forgetPatch } from "./lib/patches.mjs";
 import { runApply, latestPlan } from "./lib/apply.mjs";
 import { recordJudgment, forgetJudgment, locate } from "./lib/known.mjs";
 import { runVerify } from "./lib/verify.mjs";
+import { runPrune, KEEP_DEFAULT } from "./lib/prune.mjs";
 import { VERSION } from "./lib/version.mjs";
 
 const APP_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -25,6 +26,7 @@ const HELP = [
   "  unjudge     撤销判例（带路径或编号，或 --all）",
   "  accept      把一处改动记成「你自己改的」，以后不算脏（要带文件路径）",
   "  unaccept    撤销记录（带路径，或 --all）",
+  "  prune       收尾：旧报告只留最近几份、安装目录里的旧状态文件一并收走（都进回收站）",
   "  install     部署程序与技能到本机",
   "  uninstall   卸载程序与技能（状态默认保留）",
   "  version     显示版本",
@@ -68,6 +70,12 @@ const HELP = [
   "accept 选项：",
   "  --note=\"为什么改\"   一句话备注，扫描报告里会显示",
   "  --state-dir=<路径>  覆盖状态目录",
+  "",
+  "prune 选项：",
+  "  --keep=<份数>      报告保留几份（默认 " + KEEP_DEFAULT + "）",
+  "  --dry-run          只列会收走什么，不动手",
+  "  --no-legacy        只收报告，不碰安装目录里的旧状态",
+  "  --state-dir=<路径> 覆盖状态目录",
   "",
   "uninstall 选项：",
   "  --purge            连状态与报告一起清掉",
@@ -203,6 +211,23 @@ try {
     });
     console.log(lines.join("\n"));
     process.exitCode = code;
+  } else if (cmd === "prune") {
+    const stateDir = opt.val("state-dir") || defaultStateDir();
+    const out = runPrune({
+      installRoot: appRoot(),
+      stateDir,
+      keep: opt.val("keep") || KEEP_DEFAULT,
+      dryRun: opt.has("dry-run"),
+      legacy: !opt.has("no-legacy"),
+      agent: opt.has("agent"),
+    });
+    if (opt.has("agent")) {
+      console.log("PRUNE keep=" + out.keep + " reports=" + out.totalReports + "/" + out.droppedReports +
+        " legacy=" + out.retiredLegacy + " bytes=" + out.bytes + " blocked=" + (out.blocked ? 1 : 0) + " ok=" + (out.ok ? 1 : 0));
+    } else {
+      console.log(out.lines.join("\n"));
+    }
+    process.exitCode = out.ok ? 0 : 4;
   } else if (cmd === "scan") {
     const stateDir = opt.val("state-dir") || defaultStateDir();
     const { ctx, code } = await runScan({ stateDir, appDir: APP_DIR, full: opt.has("full"), installDir: opt.val("install-dir") || null, argv: rest });

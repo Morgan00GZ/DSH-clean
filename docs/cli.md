@@ -26,7 +26,30 @@ dsh-clean.cmd <command> [options]
 | `review` | P1 | 把待清理项列成带编号的中文清单，**不删任何东西**（等价于 `apply` 不带 `--yes`） | 只读 |
 | `apply` | P1 | 按编号把文件送进 Windows 回收站；不加 `--yes` 时只列清单 | 移动文件（进回收站） |
 | `verify` | P1 | 安装目录一致性校验：TOFU 基线 + 对照官方安装包（自动解包或手动`--upstream`目录） | 写 baseline |
+| `prune` | P2 | 收尾：历史报告只留最近 N 份，安装目录里遗留的旧状态文件先补齐再收走 | 移动文件（进回收站） |
 | `export-learning` | P3 | 导出脱敏后的判例片段，可直接提 PR | 写 data |
+
+## 收尾（prune）
+
+扫描每跑一次就多一份报告，状态也换过一次位置（旧的在 `%LOCALAPPDATA%\dsh-clean`）。`prune` 负责让工具自己不变垃圾：
+
+~~~bat
+dsh-clean.cmd prune --dry-run     :: 先看会收走什么，不动手
+dsh-clean.cmd prune               :: 真收（进回收站）
+dsh-clean.cmd prune --keep=20     :: 报告改留 20 份
+dsh-clean.cmd prune --no-legacy   :: 只收报告，不碰旧状态
+~~~
+
+- 报告按目录名（`YYYYMMDD-HHMMSS`）排序，保留最近 N 份（默认 10），其余进回收站
+- 旧状态文件（roots / patches / roster / probe-cache / last-run / sizes / known / node-path.txt / inventory）**先确认新状态目录里有，缺的先补过去**，然后才收走旧的那份——不会丢判例和补丁记录
+- 旧 `reports` 目录：新位置历史已经够长时直接收走；不够长先把缺的报告补过来
+- 顺带清两处自产垃圾：状态目录里旧版留下的空 `inventory` 目录、`tmp\recycle-list-*.json` 临时清单
+- 回收站清单文件用完即删（回执拿到后），不再攒着
+- `apply` 那套安全边界同样适用：只动回收站，回收站不可写就一个都不删，路径都在安装目录与状态目录之内
+- `--agent` 输出一行：`PRUNE keep=10 reports=43/33 legacy=9 bytes=1234 blocked=0 ok=1`
+- 退出码：`0` 收完或没东西可收 / `4` 没做成（回收站不可写或被沙箱拦住）
+
+扫描不会自己动手收尾，只在报告里提示（`--agent` 行尾 `reports=N/prune`，人类报告多一行「收尾」）。
 
 ## accept
 

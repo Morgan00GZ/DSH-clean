@@ -6,7 +6,9 @@
 
 解析顺序：`--state-dir` → 环境变量 `DSH_CLEAN_STATE` → 安装记录里的 `stateDir` → `<当前目录>\Temp\dsh-clean`。
 
-旧的 `%LOCALAPPDATA%\dsh-clean` 布局里的状态会在 `install` 时**只补不覆盖**地移到新目录（roots / patches / roster / probe-cache / last-run 与 reports / inventory），旧文件不删，确认无误后可手动清掉。
+旧的 `%LOCALAPPDATA%\dsh-clean` 布局里的状态会在 `install` 时**只补不覆盖**地移到新目录（roots / patches / roster / probe-cache / last-run 与 reports / inventory），旧文件不删；确认无误后跑 `prune` 统一收走（见下）。
+
+报告不会无限堆积：`prune` 只保留最近 10 份（`--keep=N` 可改），其余进回收站。`inventory.json` 已废弃（每次扫描的报告里就有 `run.json` 与 `plan.json`），新的 `install` 不再创建 `inventory` 目录。
 
 ```
 <工作区>\Temp\dsh-clean\

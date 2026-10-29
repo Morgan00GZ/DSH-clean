@@ -106,6 +106,21 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 绝不要用 `rm` / `del` / `Remove-Item` 代替 apply：那会永久删除，回收站里找不回来。
 
+## 收尾（报告太多 / 用户说「收拾一下」）
+
+`scan` 每跑一次攒一份报告。攒多了会自己提醒（`--agent` 行尾出现 `reports=N/prune`，人类报告多一行「收尾」）。这时跑：
+
+```
+{{DSH_CLEAN_CMD}} prune --dry-run
+```
+
+看它列出要收走什么，确认后去掉 `--dry-run` 再跑一次。它会：
+
+- 历史报告只留最近 10 份（`--keep=N` 可改），其余进回收站
+- 安装目录里遗留的旧状态文件（`%LOCALAPPDATA%\dsh-clean` 下的 roots / patches / probe-cache / last-run / sizes / inventory / reports 等）先补到新状态目录、确认没丢，再收走
+
+汇报一句话：「收了 N 项、腾出多少，回收站里能还原」。用户没提就别主动跑。
+
 ## 边界
 
 - 扫描阶段不修改、不移动、不删除任何文件，也不读文件内容（只统计大小与时间）。
