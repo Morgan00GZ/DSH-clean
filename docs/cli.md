@@ -160,6 +160,15 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 
 默认**不进入问答**：扫描完就退出，把待确认项留成文件。问答只在显式运行 `review` 时出现，且随时可以用 DSH 会话替代。因此即使完全不用命令行，也不会缺失任何功能。
 
+
+## 只读报告插件（P4）
+
+仓库里的 `plugin/` 是一个 DSH 插件「dsh-clean-report」，注册只读工具 `dsh_clean_report`。它读取最近一次扫描报告，不重新扫描、不清理，适合在对话里随时查看「上次扫描结果」。
+
+- 安装（在客户端已启动的机器上）：`dsh plugin --profile desktop add file:<repo>/plugin`
+- 工具参数：`section`（可选），取值 `summary` / `residue` / `folders` / `plugins` / `sessions` / `purity`，省略则返回残留 + 未归类
+- 返回值：`stateDir`、`hasReport`、`lastRunLine`、`summary`、`report`（含 planItems 与 report.md 全文）
+- 插件不含扫描/判据/清理逻辑；卸载插件不影响主链路
 ## 选项
 
 | 选项 | 适用 | 说明 |

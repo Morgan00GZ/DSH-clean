@@ -1,0 +1,4 @@
+# DSH-clean 只读报告工具。只注册一个独立顶层组件，不依赖其它插件。
+- insert:
+    - id: dsh-clean-report
+      name: dsh-clean-report

@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### P4 - 只读报告插件（dsh-clean-report）
+
+- 新增 plugin/ 目录：DSH 插件「dsh-clean-report」，注册只读工具 dsh_clean_report
+- 工具读取最近一次扫描报告（不重新扫描、不清理），按 section 取段（summary/residue/folders/plugins/sessions/purity，默认残留+未归类）
+- 插件自身不含扫描/判据/清理逻辑，坏掉时主链路不受影响
+- 安装：dsh plugin --profile desktop add file:<repo>/plugin（需 dsh.bundle.patch 才会进 profile 层）
+- 已验证：schema 通过 assertSupportedJsonSchema、纯逻辑对真实报告数据正确取段
+
 ### P2 / P3 - 升级遗留物检测
 
 - 扫描自动发现「升级/出错遗留物」：dsh-ops 受限模式 MSYS 缓存中，identity 与当前安装收据不匹配的死缓存（旧版本升级后不再被选中），以及暂存中断（缓存目录名与内部标记不一致）
