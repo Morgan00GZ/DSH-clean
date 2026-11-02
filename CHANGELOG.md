@@ -12,6 +12,13 @@
 - 安装：dsh plugin --profile desktop add file:<repo>/plugin（需 dsh.bundle.patch 才会进 profile 层）
 - 已验证：schema 通过 assertSupportedJsonSchema、纯逻辑对真实报告数据正确取段
 
+### 修复 - 插件装上却不出现在工具列表（ctx.tools 未 inject）
+
+- 现象：插件 bundle 层正常叠加（composed row 里有 `dsh-clean-report`）、模块能 import、schema 全过，但客户端重启后会话工具列表里始终没有 `dsh_clean_report`
+- 根因：cordis 只把**声明过依赖**的服务暴露给插件。插件在 `apply` 里直接读 `ctx.tools` 会抛 `cannot get property "tools" without inject`，apply 失败 → 工具从未注册。错误被宿主吞掉，UI 上也看不出异常
+- 修法：`ctx.inject(["tools"], (scoped) => registerReportTool(scoped))`，等 tools 服务就绪再注册（与 dsh-ops 的 `root.inject(['tools'], …)` 同一写法）
+- 复现与验证手段（新增，无需动用户的客户端）：临时 profile（bundles = dsh-base + dsh-ops + 本插件，node_modules 用 junction 指向真实包）+ `boot()` 无头启动，读 `ctx.get("tools").view().visible`。修复前 25 个工具无本工具、修复后 26 个含 `dsh_clean_report`
+
 ### 修复 - 插件 v0.2.0（会阻塞 pnpm install 的宿主链接）
 
 - 根因：插件声明了 `@deepseek-ai/dsh-tools` 作为 peerDependency，DSH 安装器会把安装目录里的宿主副本链接进 profile（`node_modules/@deepseek-ai/dsh-tools` → `...\resources\app.asar\dsh\node_modules\...`）。app.asar 是文件不是目录，pnpm 把它当 lockfile 之外的包去读 manifest，逐级上溯父目录时抛 `[ENOTDIR] ... app.asar is not a directory`，整个 `pnpm install` 中止

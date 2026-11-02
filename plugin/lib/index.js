@@ -85,6 +85,12 @@ function summarize(view) {
 }
 
 export function apply(ctx) {
+  // cordis 不会把未 inject 的服务暴露给插件：直接读 ctx.tools 会抛
+  // "cannot get property \"tools\" without inject"。这里用 ctx.inject 等 tools 就绪再注册。
+  ctx.inject(["tools"], (scoped) => registerReportTool(scoped));
+}
+
+function registerReportTool(ctx) {
   ctx.tools.register({
     name: "dsh_clean_report",
     description: "读取 DSH-clean 最近一次扫描报告（只读，不重新扫描、不清理）。返回报告摘要、待清理清单与 Markdown 全文。",
