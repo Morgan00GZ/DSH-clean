@@ -46,6 +46,16 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 - 每条讲三件事：它像什么、为什么可疑、动了会怎样。
 - 超过 3 条只报总数，问用户要不要看完整清单。
 
+## 只读面板工具 dsh_clean_report（本会话有就用）
+
+如果工具列表里有 `dsh_clean_report`，用户问的是**已有报告**的内容（「上次扫出什么 / 有多少残留 / 插件被改过没 / 客户端纯不纯」）时，直接调它取段，**不要重跑 scan**——重跑要重新遍历全盘，白花算力：
+
+    dsh_clean_report({ section: "residue" })
+
+- `section` 省略 = 残留 + 未归类；可选 `summary` / `residue` / `folders` / `plugins` / `sessions` / `purity`。
+- 它只读最近一次报告，不扫描、不清理；返回里带 `lastRunLine` 和 `report`（含 planItems 与 report.md 全文）。
+- 需要「最新数据」时才跑 `scan --agent`。分工：工具看旧结果，scan 刷新结果。
+- 插件装了但本会话看不到这个工具 = 客户端还没重启（插件只在启动时加载），告诉用户重启一次即可，不要自己去改配置。
 ## purity
 
 - `purity=0` 表示客户端与安装时一致；大于 0 说明有文件被改过，需要打开报告里的「纯净度」段解释清楚。

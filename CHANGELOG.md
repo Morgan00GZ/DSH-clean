@@ -12,6 +12,18 @@
 - 安装：dsh plugin --profile desktop add file:<repo>/plugin（需 dsh.bundle.patch 才会进 profile 层）
 - 已验证：schema 通过 assertSupportedJsonSchema、纯逻辑对真实报告数据正确取段
 
+### 修复 - 插件 v0.2.0（会阻塞 pnpm install 的宿主链接）
+
+- 根因：插件声明了 `@deepseek-ai/dsh-tools` 作为 peerDependency，DSH 安装器会把安装目录里的宿主副本链接进 profile（`node_modules/@deepseek-ai/dsh-tools` → `...\resources\app.asar\dsh\node_modules\...`）。app.asar 是文件不是目录，pnpm 把它当 lockfile 之外的包去读 manifest，逐级上溯父目录时抛 `[ENOTDIR] ... app.asar is not a directory`，整个 `pnpm install` 中止
+- 修法：插件去掉全部 `@deepseek-ai/*` peerDependencies（运行时宿主 loader 本来就能解析，其它已装插件都没这条链接），并改用普通工具对象 `ctx.tools.register({...})`，不再 import 宿主包
+- 同时修掉一个装上去就会加载失败的问题：value schema DSL 不允许**根级** `required`（`schema.required is not supported by the value schema DSL`），v0.1.0 的 `output.schema` 带了根级 required，defineTool 编译即抛错——因为装完一直没重启，没暴露
+- plugin/package.json → 0.2.0；部署副本已刷新（`--force` 刷不动 injected 副本，需删掉 `node_modules/dsh-clean-report` 再 install）
+
+### P1 - 符号链接体检
+
+- 扫描新增「符号链接」判据：`node_modules` 里指向安装目录（`app.asar`）或 profile 之外的链接 → 报为风险项（`HOST-LINK`，会让 pnpm install 崩），并把悬空链接算作残留
+- 修复方式写在报告里（删链接即可，运行时不依赖）；`--agent` 行在有风险时追加 `HOST-LINK N ...` 提示，干净时不占 token
+- 判据双向验证：合成 junction 指向含 `app.asar` 的路径 → 报 1 条；profile 内部的普通 junction → 不报
 ### P2 / P3 - 升级遗留物检测
 
 - 扫描自动发现「升级/出错遗留物」：dsh-ops 受限模式 MSYS 缓存中，identity 与当前安装收据不匹配的死缓存（旧版本升级后不再被选中），以及暂存中断（缓存目录名与内部标记不一致）

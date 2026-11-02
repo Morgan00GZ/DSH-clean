@@ -1,8 +1,14 @@
-import { defineTool } from "@deepseek-ai/dsh-tools";
 import path from "node:path";
 import fs from "node:fs";
 
 export const name = "dsh-clean-report";
+
+/*
+ * 故意不 import "@deepseek-ai/dsh-tools"：declare 这个 peer 会让 DSH 安装器在
+ * profile 的 node_modules 里放一条指向 <安装目录>\resources\app.asar 的符号链接，
+ * 之后每次 pnpm install 都会因为无法 stat app.asar 里的 package.json 抛 ENOTDIR。
+ * 这里按 dsh-tools 的 defineTool 契约（name/description/parameters/output.schema+render/execute）
+ * 直接构造普通工具对象，等价且零 peer。 */
 
 const REPORT_RE = /^\d{8}-\d{6}$/;
 
@@ -79,13 +85,16 @@ function summarize(view) {
 }
 
 export function apply(ctx) {
-  ctx.tools.register(defineTool({
+  ctx.tools.register({
     name: "dsh_clean_report",
     description: "读取 DSH-clean 最近一次扫描报告（只读，不重新扫描、不清理）。返回报告摘要、待清理清单与 Markdown 全文。",
     parameters: {
-      section: {
-        type: "string",
-        description: "可选：只取报告的一段。summary / residue / folders / plugins / sessions / purity / top；省略则返回完整摘要。",
+      type: "object",
+      properties: {
+        section: {
+          type: "string",
+          description: "可选：只取报告的一段。summary / residue / folders / plugins / sessions / purity / top；省略则返回完整摘要。",
+        },
       },
     },
     output: {
@@ -142,18 +151,19 @@ export function apply(ctx) {
       },
     },
     async execute(args) {
+      if (args && args.section !== undefined && typeof args.section !== "string") {
+        throw new Error("invalid arguments: $.section 必须是字符串");
+      }
       const stateDir = resolveStateDir();
       const view = buildView(args, stateDir);
-      return {
-        stateDir,
-        hasReport: view.hasReport,
-        lastRunLine: view.lastRunLine ?? null,
-        lastRunAt: view.lastRunAt ?? null,
-        summary: summarize(view),
-        report: view.report,
-      };
+      // 缺省的字段直接省略，保证返回值形状与 output.schema 完全一致（不出现 null）。
+      const value = { stateDir, hasReport: view.hasReport, summary: summarize(view) };
+      if (view.lastRunLine) value.lastRunLine = view.lastRunLine;
+      if (typeof view.lastRunAt === "number") value.lastRunAt = view.lastRunAt;
+      if (view.report) value.report = view.report;
+      return value;
     },
-  }));
+  });
 }
 
 /** 从 Markdown 里按二级标题取一段（到下一个同级标题为止）。 */

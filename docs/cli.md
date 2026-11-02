@@ -169,6 +169,14 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 - 工具参数：`section`（可选），取值 `summary` / `residue` / `folders` / `plugins` / `sessions` / `purity`，省略则返回残留 + 未归类
 - 返回值：`stateDir`、`hasReport`、`lastRunLine`、`summary`、`report`（含 planItems 与 report.md 全文）
 - 插件不含扫描/判据/清理逻辑；卸载插件不影响主链路
+
+两条踩过的坑（改插件时必须守住）：
+
+- **不要声明 `@deepseek-ai/*` 作为 peerDependency**。DSH 安装器会据此把安装目录里的宿主副本链接进 profile（`node_modules/@deepseek-ai/dsh-tools` → `...\resources\app.asar\dsh\...`）。app.asar 是文件不是目录，pnpm 读它的 manifest 时会逐级上溯父目录，抛 `[ENOTDIR] ... app.asar is not a directory`，整个 `pnpm install` 中止。运行时宿主 loader 本来就能解析宿主包，不需要这条链接；插件照普通对象 `ctx.tools.register({ name, description, parameters, output, execute })` 注册即可。
+- **value schema DSL 禁止根级 `required`**（`schema.required is not supported by the value schema DSL`），对象节点必须显式写 `additionalProperties`。写错时 defineTool 编译即抛错、插件加载失败，而且只有在客户端重启后才会暴露。
+- 改了插件要刷新部署副本：`--force` 刷不动 injected 副本，先删 `node_modules/dsh-clean-report` 再 install。
+
+扫描器会顺带体检这类链接：`node_modules` 里指向安装目录（`app.asar`）或 profile 之外的符号链接报为风险项（`--agent` 行出现 `HOST-LINK`），悬空链接算残留。
 ## 选项
 
 | 选项 | 适用 | 说明 |
