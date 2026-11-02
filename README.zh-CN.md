@@ -1,6 +1,6 @@
 # DSH-clean
 
-![version](https://img.shields.io/badge/version-0.2.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
+![version](https://img.shields.io/badge/version-0.3.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
 
 **审计并清理 Windows 上 DeepSeek Harness 桌面端的占用与残留。**
 
@@ -47,7 +47,7 @@ DSH-clean 是一个零依赖的 Node 命令行工具，只回答关于一台机�
 
 ## 安装
 
-1. 从 [Releases](https://github.com/Morgan00GZ/DSH-clean/releases) 下载 `dsh-clean-0.2.0.zip`。
+1. 从 [Releases](https://github.com/Morgan00GZ/DSH-clean/releases) 下载 `dsh-clean-0.3.0.zip`。
 2. 解压到普通目录——不要放在 `C:\Windows`，也不要放在 DeepSeek Harness 安装目录里。
 3. 双击 `install.cmd`。
 4. 重启 DSH（或新开一个会话），输入 `/dsh-clean`。
@@ -92,7 +92,7 @@ install.cmd
 人类可读输出（节选）：
 
 ~~~
-DSH-clean v0.2.0 - 2026-11-02 12:00
+DSH-clean v0.3.0 - 2026-11-02 12:00
 
 环境
   DSH 桌面端   0.2.1-rc.3
@@ -111,7 +111,7 @@ DSH 相关文件夹（8）
 agent 输出（`--agent`，最多两行）：
 
 ~~~
-PURITY v0.2.0 dsh=44.7.0 roots=10 files=50792 residue=1/0B unknown=0 sessions=11/32.4MB purity=0 integrity=ok plugins=182/0 patch=0/0 probe=+3/0 locked=0 known=0 leftover=0 next=review cfgbad=1
+PURITY v0.3.0 dsh=44.7.0 roots=10 files=50792 residue=1/0B unknown=0 sessions=11/32.4MB purity=0 integrity=ok plugins=182/0 patch=0/0 probe=+3/0 locked=0 known=0 leftover=0 next=review cfgbad=1
 ~~~
 
 ## 卸载
@@ -142,6 +142,7 @@ DSH 不自带独立 `node.exe`；DSH-clean 复用现有运行时，顺序如下�
 
 - **自定义安装路径且没有 Node**：如果 DSH 不在默认位置、PATH 里也没有 `node`，启动器会停在 `Cannot find a Node runtime`。解决：把 `node` 加进 PATH，或把 `DSH_DESKTOP_NODE_EXECUTABLE` 指向你的 `DeepSeek Harness.exe`。
 - **执行策略与杀软**：`install.cmd` 用 `-ExecutionPolicy Bypass` 运行脚本以绕过执行策略限制；向用户目录写入文件仍可能触发杀软提示。
+- **CLI 输出为中文**：控制台与 `report.md` 目前是中文；助手会用你的语言汇报，也可按需翻译，CLI 自身的英文输出尚未实现。
 - **仅 Windows**：回收站与注册表发现都是 Windows 专有实现。引擎层已按可移植方式组织，但暂不支持其他平台。
 
 ## 文档
@@ -156,18 +157,18 @@ DSH 不自带独立 `node.exe`；DSH-clean 复用现有运行时，顺序如下�
 
 ## 版本与发布
 
-- 当前版本：**0.2.0**（`lib/version.mjs`），发布 tag：**0.2**。
-- 每个版本把 `dsh-clean-0.2.0.zip` 与 `SHA256SUMS.txt` 挂在 GitHub Release 上；ZIP 由 `git archive` 按 tag 生成，内容与 tag 完全一致（测试与开发脚本通过 `.gitattributes` 排除）。
+- 当前版本：**0.3.0**（`lib/version.mjs`），发布 tag：**0.3**。
+- 每个版本把 `dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt` 挂在 GitHub Release 上；ZIP 由 `git archive` 按 tag 生成，内容与 tag 完全一致（测试与开发脚本通过 `.gitattributes` 排除）。
 - 运行前可先校验下载物：
 
 ~~~powershell
-Get-FileHash .\dsh-clean-0.2.0.zip -Algorithm SHA256
+Get-FileHash .\dsh-clean-0.3.0.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS.txt
 ~~~
 
-- 本地打包：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.2`。
+- 本地打包：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.3`。
 
-（待补充：tag 是否统一改成 `v0.2.0` 形式；目前沿用 `0.1` 的短格式 `0.2`，与 `VERSION` 0.2.0 的对应关系是「去掉补丁位」。）
+（待补充：tag 是否统一改成 `v0.3.0` 形式；目前沿用 `0.1` 的短格式（`0.2`、`0.3`），与 `VERSION` 0.3.0 的对应关系是「去掉补丁位」。）
 
 ## 许可证
 

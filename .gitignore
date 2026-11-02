@@ -16,3 +16,6 @@ Thumbs.db
 
 # 本地打包产物
 archives/
+
+# 早期 install/launch 事故留下的空路径链，不属于本工具产物
+%SystemDrive%/

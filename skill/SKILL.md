@@ -1,6 +1,6 @@
 ---
 name: dsh-clean
-description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用，找出卸载残留、冗余文件，以及与安装包不一致的改动。当用户提到「DSH 不干净 / 有残留 / 卸载插件没卸干净 / 占了多少空间 / 客户端有没有被改过 / 清理 DSH」时使用。默认只读；用户明确要清理时才用 review/apply，删除一律进回收站。
+description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用，找出卸载残留、冗余文件，以及与安装包不一致的改动。当用户提到「DSH 不干净 / 有残留 / 卸载插件没卸干净 / 占了多少空间 / 客户端有没有被改过 / 清理 DSH」时使用。默认只读；用户明确要清理时才用 review/apply，删除一律进回收站。 Audit and clean the DeepSeek Harness Desktop footprint on Windows: owned folders, uninstall/upgrade leftovers, installer drift. Read-only by default; deletions go to the Recycle Bin.
 ---
 
 # DSH-clean
@@ -41,7 +41,9 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 ## 怎么汇报
 
-- 用中文，用 Windows 的说法：路径保留反斜杠，体积用 GB/MB。
+- 用用户消息所用的语言汇报（用户说中文就说中文，说英文就说英文）。
+- 路径保留 Windows 反斜杠，体积用 GB/MB。
+- 工具自身的输出是中文；向非中文用户汇报时按需翻译或概述，不要整段照抄中文。
 - 先一句话结论（干净 / 有 N 处残留 / 有 N 处要你确认），再最多列 3 条细节。
 - 每条讲三件事：它像什么、为什么可疑、动了会怎样。
 - 超过 3 条只报总数，问用户要不要看完整清单。
@@ -104,7 +106,7 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
    输出是带编号的表（编号 / 档位 / 体积 / 理由 / 路径），一屏几百 token。
 
-2. 用中文问「要清哪几项」，**A 档和 B 档分开说**：A 档是明确残留（备份、0 字节半成品），B 档多半是没用的安装包但要用户点头。一次问清，别逐项来回。
+2. 用用户的语言问要清哪几项（中文「要清哪几项」/ English "which items to clean"），**A 档和 B 档分开说**：A 档是明确残留（备份、0 字节半成品），B 档多半是没用的安装包但要用户点头。一次问清，别逐项来回。
 
 3. 只按用户给过的编号执行，**不要自作主张扩大范围**：
 
@@ -164,4 +166,4 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 ## 回归测试
 
-改过判据就顺手跑一次 `tests\run.cmd`（13 个用例，几秒），全绿再上真机。
+改过判据就顺手跑一次 `tests\run.cmd`（当前 15 个用例，几秒），全绿再上真机。
