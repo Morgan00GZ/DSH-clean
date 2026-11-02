@@ -274,7 +274,22 @@ JSON 解析失败时：
 - 默认位于 `%LOCALAPPDATA%`，不进仓库（`.gitignore` 兜底）
 - `report.md` 中把 `%USERPROFILE%` 替换为 `~`
 - `export-learning` 强制脱敏，且不含文件内容
+
 ## 升级遗留物
 
-扫描时自动检测 `~/.dsh/dsh-ops/bash-ipc/<identity>` 缓存：与当前安装的 dsh-ops 收据（`<profile>/node_modules/dsh-ops/runtime/win32-x64/bash-ipc/provenance.json`）算出的 identity 不匹配，或缓存目录名与内部 `.ops-ipc.json` 标记不一致，即为死缓存/暂存中断，进入残留清单（tier=B，rule=upgrade-leftover）。
+扫描时自动检测 `~/.dsh/dsh-ops/bash-ipc/<identity>` 缓存：与当前安装的 dsh-ops 收据（`<profile>/node_modules/dsh-ops/runtime/win32-x64/bash-ipc/provenance.json`）算出的 identity 不匹配，或者缺 `.ops-ipc.json` 标记（暂存中断），都算遗留。当前收据对应的那份缓存算「在用」，不报。
 
+- 收据本身读不到（包被降级/裁掉）时保守处理：所有缓存都不算在用
+- 没有缓存目录时零成本返回，不产生任何 IO
+
+## 卸载遗留物与死配置行
+
+名册（`roster.json`）会记下每个插件最后一次出现的状态。插件被删后，它在数据根下建的目录/文件不会跟着走：
+
+- `uninstalled-plugin-data`（tier B）：数据根一层的目录/文件能对上某条 `status=retired` 的记录（去 scope、去 `dsh-`/`plugin-` 前缀后主干词相同或同族）。仍在装的插件同名/同族一律不报
+- `stale-config-row`（tier B）：`cordis.patch.yml` 里 `- id:`/`name:` 指向的包既不在 profile、也不在客户端内置包里。**只报告、不改文件**，用 `NO_APPLY_RULES` 挡在 `plan.json` 之外
+
+对应的机读字段（仅命中时出现，干净时不占 token）：
+
+- `orphan=N`：卸载遗留条目数；`--agent` 第二行给 `UNINSTALL-LEFTOVER` 提示
+- `cfgbad=N`：死配置行数；`--agent` 第二行给 `STALE-PATCH-ROW` 提示

@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### 修复 - 报告可读性与升级丢补丁的处置
+
+- `PATCH-LOST` 不再只说「见报告」：报告「已知改动」段给出两条出路（重新打补丁后 `accept` 重登记 / `unaccept` 去掉记录），简报里也有同样的一行处置建议
+- 「名册对账」措辞改清楚：`pnpm-lock 声明 N 个（含间接依赖与其他平台的可选包） / node_modules 实际 M 个`，并补一句「声明数通常大于实际数，只有孤儿/缺失/版本不符非零才是问题」，消除 229 vs 182 的误读
+- 两个文案抽成纯函数 `patchLostAdvice` / `lockReconcileText`，新增 2 个回归用例（共 15 个）
+- 文档同步：`docs/tiers.md` 判据清单补 `uninstalled-plugin-data` / `stale-config-row` / `upgrade-leftover` 并说明 `host-link` / `dangling-link` 属插件包体检；`docs/state.md` 补齐两条新判据与 `orphan` / `cfgbad` 字段
+
 ### P2 - 卸载遗留判据与回归测试
 
 - 插件卸载后留在 `~/.dsh` 下的数据目录/文件不再静默混进「未归类」：新增 `lib/orphans.mjs`，拿名册（`roster.json`）里 `status=retired` 的记录当「已卸载插件」，按名字子集/同族前缀认领数据目录与顶层文件，命中报 `uninstalled-plugin-data`（tier B），带体积与「属于哪个已卸载插件」

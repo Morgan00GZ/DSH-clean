@@ -35,8 +35,18 @@
 | `stale-log` | 停滞日志 | 日志目录中 mtime > 90 天 | A |
 | `dup-version` | 重复版本 | 同一包存在多版本，仅一个被引用 | B |
 | `big-artifact` | 大件 | 被判 RESIDUE 且 > 100 MB | B |
+| `uninstalled-plugin-data` | 卸载遗留 | 数据根一层的目录/文件，名字能对上某条「已卸载」名册记录（去 scope、去 `dsh-`/`plugin-` 前缀后主干词相同或同族） | B |
+| `stale-config-row` | 死配置行 | `cordis.patch.yml` 的 `- id:`/`name:` 指向的包既不在 profile、也不在客户端内置包 | B（只报告，不进清理清单） |
+| `upgrade-leftover` | 升级遗留 | dsh-ops 受限 MSYS 缓存的 identity 与当前收据不符，或缺 `.ops-ipc.json`（暂存中断） | B |
 
-判据是**关系型**的，不写死具体路径。这样换机器、换版本依然成立；新增一类残留只需往 `rules.json` 加一条。
+判据是**关系型**的，不写死具体路径。这样换机器、换版本依然成立。新增一类残留有两条路：路径类的往 `rules.json` 加一条；关系类的（要跨文件推断）在 `lib/` 里加一个判据模块并在 `scan.mjs` 接线。
+
+另有两条**插件包体检**项不进残留表，只在「插件包」段报告：
+
+| id | 判据 | 命中条件 | 后果 |
+|---|---|---|---|
+| `host-link` | 宿主符号链接 | `node_modules` 里的链接指向安装目录（`app.asar`）或 profile 之外 | pnpm install 抛 `[ENOTDIR]`，删链接即修，运行时不依赖 |
+| `dangling-link` | 悬空链接 | 链接目标已不存在 | 属残留，可清 |
 
 ## 4. 硬边界
 
