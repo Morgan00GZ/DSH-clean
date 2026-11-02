@@ -167,7 +167,7 @@ Get-Content .\SHA256SUMS.txt
 ~~~
 
 - 本地打包：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.3`。
-- 推送提交与 tag（Windows）：双击 `tools\push.cmd`，会先列出要推的内容并询问；`--dry-run` 只预览。
+- 推送提交与 tag（Windows）：双击 `tools\push.cmd`，会先列出要推的内容并询问；`--dry-run` 只预览。首次运行若找不到 Node，会问一次 `DeepSeek Harness.exe` 的路径，并记到 `%LOCALAPPDATA%\dsh-clean\node-path.txt`。
 - 给 tag `0.3` 挂 GitHub Release：双击 `tools\release-github.cmd`（需要 GitHub CLI：`winget install --id GitHub.cli`，然后 `gh auth login`）。它会传 `archives\dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt`，可重复执行。
 
 （待补充：tag 是否统一改成 `v0.3.0` 形式；目前沿用 `0.1` 的短格式（`0.2`、`0.3`），与 `VERSION` 0.3.0 的对应关系是「去掉补丁位」。）

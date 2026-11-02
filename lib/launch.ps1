@@ -5,6 +5,11 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $exe = $env:DSH_DESKTOP_NODE_EXECUTABLE
+$cachedPath = Join-Path $env:LOCALAPPDATA 'dsh-clean\node-path.txt'
+if (-not $exe -and (Test-Path -LiteralPath $cachedPath)) {
+  $cached = (Get-Content -LiteralPath $cachedPath -TotalCount 1)
+  if ($cached -and (Test-Path -LiteralPath $cached.Trim())) { $exe = $cached.Trim() }
+}
 $ver = ''
 if (-not $exe) {
   $lines = @()
