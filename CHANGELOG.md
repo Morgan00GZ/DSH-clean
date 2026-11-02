@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+### P2 - 卸载遗留判据与回归测试
+
+- 插件卸载后留在 `~/.dsh` 下的数据目录/文件不再静默混进「未归类」：新增 `lib/orphans.mjs`，拿名册（`roster.json`）里 `status=retired` 的记录当「已卸载插件」，按名字子集/同族前缀认领数据目录与顶层文件，命中报 `uninstalled-plugin-data`（tier B），带体积与「属于哪个已卸载插件」
+- 启动层死行单独成判据：解析 `cordis.patch.yml` 的 `- id:`/`name:` 对，包名像插件（`dsh`/`harness`/scoped）且既不在 profile 也不在客户端内置包里 → `stale-config-row`（tier B）。**只报告不改文件**，且永不进清理清单（`plan.json` 用 `NO_APPLY_RULES` 排除，`apply` 不会去动 yml）
+- 内置包识别：读 `resources/app.asar/dsh/node_modules`（实测 `ELECTRON_RUN_AS_NODE` 下 `node:fs` 是 asar 感知的，`original-fs` 反而读不进去）。不认内置包时，cordis 里上百行指向 `@deepseek-ai/*` 组件会被全报成死行（实测假阳性 17 → 0）
+- `--agent` 行仅在命中时追加 `orphan=N` / `cfgbad=N`；报告新增「卸载遗留物」小节与 `UNINSTALL-LEFTOVER` / `STALE-PATCH-ROW` 提示
+- 新增回归骨架：`tests\run.cmd` → `tests/run.mjs` 跑 `tests/cases/*.mjs`（孤儿匹配正反例、死行、升级遗留物、机读行渲染），13 个用例全绿
+
+
 ### P4 - 只读报告插件（已撤销）
 
 - 试做过 `dsh-clean-report` 插件（注册只读工具 `dsh_clean_report`，读取最近一次扫描报告），因工具在客户端里始终注册不上，已整体移除：仓库不再有 `plugin/`，交互恢复为纯文字（命令 + 报告文件）

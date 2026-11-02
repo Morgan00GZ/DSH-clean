@@ -154,3 +154,14 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 ## 升级遗留物
 
 `scan` 会自动发现 dsh-ops 受限 MSYS 缓存里的死缓存（identity 与当前收据不匹配 / 暂存中断）。报告「升级遗留物」段；`--agent` 行尾 `leftover=N`。
+
+## 卸载遗留物与死配置行
+
+`--agent` 行尾出现 `orphan=N`：已卸载插件留下的数据目录/文件（报告里「卸载遗留物」段）。出现 `cfgbad=N`：`cordis.patch.yml` 里指向已消失包的死行（报告「残留」表里的 `stale-config-row` 行）。
+
+- `orphan` 项可以进清理清单，但先按报告里的「属于哪个插件、什么时候卸的」跟用户确认再清。
+- `cfgbad` 项**永远只报告**：不在 `plan.json` 里，`apply` 不会动 `cordis.patch.yml`。要消掉启动 WARN，只能用户自己删那两行或把插件装回来。
+
+## 回归测试
+
+改过判据就顺手跑一次 `tests\run.cmd`（13 个用例，几秒），全绿再上真机。

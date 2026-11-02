@@ -165,6 +165,14 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 
 扫描器会顺带体检插件目录里的宿主链接：`node_modules` 里指向安装目录（`app.asar`）或 profile 之外的符号链接报为风险项（`--agent` 行出现 `HOST-LINK`），悬空链接算残留。
 
+## 卸载遗留与死配置行
+
+插件删掉之后，它自己在 `~/.dsh` 下建的数据目录、文件不会跟着走。扫描用名册里「已卸载」的记录去认领这些残骸：
+
+- 判据 `uninstalled-plugin-data`（tier B）：数据根下一层的目录/文件，名字能对上某个已卸载插件（去 scope、去 `dsh-`/`plugin-` 前缀后主干词相同或同族）即报。**仍在装的插件同名或同族时一律不报**（宁少报不多报）
+- 判据 `stale-config-row`（tier B）：`cordis.patch.yml` 里某行指向的包既不在 profile、也不在客户端内置包里 → 启动会 WARN `patch: entry ... not found`。**只报告，不改文件**，也不会写进 `plan.json`，`apply` 不会碰它
+- `--agent` 行在命中时追 `orphan=N`（卸载遗留条数）/ `cfgbad=N`（死行数）；干净时这两个字段不出现
+
 ## 选项
 
 | 选项 | 适用 | 说明 |
@@ -222,6 +230,8 @@ PURITY v0.1.0 dsh=44.7.0 roots=12 files=52017 residue=0/0B unknown=0 sessions=53
 - `next=` 取值：`review` / `none`（全净）
 - `locked=N`：本轮因「正在写入」而跳过的项数（见 state.md 的 LOCKED 一节），这些项不进清理清单
 - `known=N`：判例库条数（`judge` 记下的裁决）
+- `orphan=N`：已卸载插件留下的数据条目数（仅命中时出现）
+- `cfgbad=N`：`cordis.patch.yml` 里的死行数（仅命中时出现；只报告，不进清理清单）
 - `reports=N/prune`：历史报告份数；超过保留数（默认 10）时带 `/prune` 提示跑 `prune`
 
 第二行仅在需要人决策时出现，形如：
