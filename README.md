@@ -1,80 +1,58 @@
 # DSH-clean
 
-**DeepSeek Harness 桌面端的纯净度巡检与清理工具**
+![version](https://img.shields.io/badge/version-0.2.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
 
-按需运行，不装插件、不常驻、不改客户端配置。只回答四个问题：
+**Audit and clean the DeepSeek Harness Desktop footprint on Windows.**
 
-1. 这台机器上跟 DSH 有关的文件夹，一共有哪些、各自归谁？
-2. 装过又卸掉的插件，留下了什么？
-3. 客户端文件有没有被改过，改了哪些？
-4. 还有哪些东西该清，并且能安全地清？
+**English** | [简体中文](README.zh-CN.md)
 
-> **状态：可用版（P0 清点 + P1 清理 + P1 上游校验已落地）。** 扫描与报告已跑通；清理（A/B 档 vs 回收站）与上游校验（对照官方安装包）都是可用功能，见 [docs/roadmap.md](docs/roadmap.md) 与 [docs/cli.md](docs/cli.md)。
+DSH-clean is a zero-dependency Node CLI that answers four questions about one machine:
 
-## 先说人话
+1. Which folders does DeepSeek Harness Desktop own, and who owns each of them?
+2. Which plugins were installed and later removed - and what did they leave behind?
+3. Have any client files changed compared with the official installer?
+4. What can be cleaned up safely, and how?
 
-如果你不想碰命令行，只需要记住三件事：
+It runs on demand (no daemon, no scheduled task, no startup hook), is read-only by default, and every deletion goes to the Windows Recycle Bin.
 
-1. **它不常驻。** 你不叫它，它就不存在——不占内存、不改 DSH、不偷偷在后台跑。
-2. **它默认不删东西。** 第一次跑只是「点名 + 写报告」：报告里告诉你哪些像垃圾、哪些可疑。真要删，得你点头，而且是扔进回收站，随时能还原。
-3. **你可以当它不存在，直接在 DSH 里跟我说。** 我在对话里运行它、把结果翻成中文、按你的话执行。
+## What "clean" means
 
-### 三种用法
+Four testable conditions, not a feeling:
 
-| 你想怎么用 | 你要做的 | 它 / 我 要做的 |
+| # | Condition | How it is tested |
 |---|---|---|
-| **最省事（推荐）** | 在 DSH 对话框里打 `/dsh-clean`，或说「扫一下 DSH 有没有残留」 | 我加载技能、运行扫描、读两行摘要，用中文告诉你「有 3 处可以清、2 处要你确认」；你回「清的 1 和 3」，我照做 |
-| 没装技能 / 不想开对话 | 双击 `dsh-clean.cmd` | 弹一个黑窗口，滚出几行中文，写一份报告和一个「待确认清单」文件，然后停住等你按键 |
-| 平时 | 什么都不做 | 什么都不发生 |
+| 1 | Every relevant folder can be enumerated | Root registry (`roots.json`); each entry records where it came from (registry, default location, config reverse-lookup) |
+| 2 | Every folder has an owner | Each top-level directory maps to host / plugin / cache / unknown |
+| 3 | The install directory matches the official installer | Hash baseline of the install tree (mtime + size gate, full pass on first run) plus optional `verify --installer` / `verify --upstream` against a second copy of the installer; files whose timestamps are preserved by the vendor are explained, not counted as dirty |
+| 4 | No historical leftovers or useless files | The rule engine reports residue; a human decides; deletions go to the Recycle Bin |
 
-黑窗口里**不需要你输入任何东西**。真需要你选的时候，也只是「按编号选 1、3 还是 7」，不用记命令、不用背参数。
+Conditions 1-2 are prerequisites: without them, "clean" has no meaning.
 
-### 为什么它自己不连 AI
+## Features
 
-技术上可以让它直接调大模型接口去判断陌生文件，但故意不做，三个原因：
+- **Zero dependencies** - reuses the Node runtime that ships with DSH (Electron in Node mode). Nothing to install, nothing to build.
+- **Read-only by default** - dry-run unless you explicitly apply; deletions only ever go to the Recycle Bin.
+- **On demand** - no background process, no watcher, no hooks.
+- **Incremental** - a full pass builds the baseline; later passes diff by (size, mtime) and usually touch only dozens of files.
+- **Portable knowledge** - a built-in knowledge base ships with the repo, so a first run on an unknown machine already has half the judgement; local decisions accumulate in a case base (`judge`) so the same question is never asked twice.
+- **Careful with files being written** - metadata is sampled twice at the end of a scan; anything changing is marked LOCKED and skipped this round.
+- **Token-frugal** - the agent-facing output is compressed to a line or two; no agent means no tokens at all.
+- **Leftover detection** - uninstall leftovers (data left by removed plugins, claimed through the retired-plugin roster), upgrade leftovers (dead caches such as a dsh-ops bash-ipc staging directory whose identity no longer matches the current package receipt), and stale rows in the startup patch layer (reported only, never edited).
 
-- **密钥不能散。** 一旦内置调用，每个用的人都要填自己的 API Key，密钥满天飞。
-- **重复付费。** 你手上的 DSH 已经为这份推理付过钱，工具再调一次是重复收费。
-- **判断要留痕。** AI 的判断不该隐身在工具里。让 AI 在对话里说出理由、你点头、记录进判例库，日后才查得清、改得动。
+## Requirements
 
-所以分工是：**工具负责「看得全、记得住」，AI 负责「想得明白」，你负责「点头」。**
+- Windows 10 or Windows 11
+- Either DeepSeek Harness Desktop installed on the machine, or `node` on PATH - one of the two is enough
+- No npm, no build step, no administrator rights
 
----
+## Installation
 
-## 「干净」的定义
+1. Download `dsh-clean-0.2.0.zip` from [Releases](https://github.com/Morgan00GZ/DSH-clean/releases).
+2. Extract it to an ordinary folder - not `C:\Windows`, and not inside the DeepSeek Harness install directory.
+3. Double-click `install.cmd`.
+4. Restart DSH (or open a new session) and type `/dsh-clean`.
 
-DSH-clean 把「干净」拆成四条**可测**的条件，不靠感觉：
-
-| # | 条件 | 测法 |
-|---|---|---|
-| 1 | 相关文件夹可穷举 | 根目录登记表 `roots.json`，每一项都带来源（注册表 / 默认位置 / 配置反解） |
-| 2 | 每个目录都有归属 | 顶层目录必须映射到「宿主 / 插件 / 缓存 / 未归属」之一 |
-| 3 | 安装目录与官方安装包一致 | 安装目录哈希基线（mtime+大小闸门，首次全量） + 可选 `verify --installer/--upstream` 对照官方安装包；发行方原时间戳文件已解释，不算脏 |
-| 4 | 无历史残留与无用文件 | 判据引擎给出 RESIDUE，人工裁决后进回收站 |
-
-不满足 1–2 时，「干净」无从谈起 —— 所以它们排在清理之前。
-
-## 特点
-
-- **零依赖**：复用 DSH 自带的运行时（Electron 以 node 模式运行），不装任何包、不需要构建
-- **只读优先**：默认 dry-run；删除只进 Windows 回收站（可还原）
-- **按需**：无守护进程、无定时任务、无启动钩子
-- **增量**：首轮全量建库，之后按 (size, mtime) 差分，通常只处理几十个文件
-- **经验可携带**：内置知识库随仓库分发，陌生机器首跑就有一半判断力；本机裁决沉淀为判例库（`judge`），判过的不再重复问
-- **不误伤正在写的文件**：扫描末尾抽样两次元数据，正在下载/正在写入的这次标 LOCKED 跳过，下轮再看
-- **省 token**：给 agent 的输出压成两行；不需要 agent 时不产生任何 token
-
-## 快速开始
-
-**第一次（装一次就够）：** 把仓库下载到本机，双击 `install.cmd`。它做三件事：
-
-1. 把程序复制到 `%LOCALAPPDATA%\dsh-clean\app\`（固定位置，与仓库解耦）
-2. 把技能装进 `%USERPROFILE%\.dsh\skills\dsh-clean\`（DSH 的「用户级技能」目录）
-3. 写一份安装记录，供将来 `uninstall` 精确回滚
-
-**之后每次：** 在 DSH 对话框里打 `/dsh-clean`，或直接说一句「扫一下 DSH 有没有残留」。剩下的全在对话里完成——我跑扫描、用中文汇报、你说「删 1 和 3」，我扔回收站。
-
-**想卸掉：** 双击 `uninstall.cmd`。程序、技能、安装记录一起清掉，不留孤儿技能。
+Developers can use a clone instead:
 
 ~~~bat
 git clone https://github.com/Morgan00GZ/DSH-clean.git
@@ -82,89 +60,115 @@ cd DSH-clean
 install.cmd
 ~~~
 
-常用命令：`scan`（只读清查）· `review` / `apply`（清单 / 进回收站）· `judge`（记住判定）· `verify`（对照安装包）· `prune`（旧报告与旧状态收尾）· `export-learning`（把判例导出成可提 PR 的片段）· `install` / `uninstall`。完整命令契约见 [docs/cli.md](docs/cli.md)。
+### What the installer creates
 
-## 输出长什么样
-
-人类模式（节选）：
-
-~~~
-DSH-clean v0.1.0 - 2026-10-28 00:08
-
-环境
-  DSH 桌面端   0.2.1-rc.3
-  DSH 运行时   44.7.0
-  总占用       3.7GB · 53,625 个文件 · 较上次 +34.4KB · 耗时 0.9s
-
-DSH 相关文件夹（8）
-  install            D:\Software\DeepSeek Harness               1.0GB  客户端安装目录 · launcher
-  data               ~\.dsh                                     2.0GB  用户数据 · default
-  updater:dsh…pdater ~\AppData\Local\@deeps…h-desktop-updater 552.6MB  更新缓存 · default
-  workspace:1        D:\DeepSeek Harness                       44.0MB  工作区 · 浅扫
-
-纯净度（对比安装时的状态）
-  安装时刻   2026-10-23 16:00 · 7,814 个文件中 100.0% 落在同一分钟
-  安装目录   偏离 2 处（0.03%，多为保留原时间戳的静态文件）
-  插件包     见下方「插件包（pnpm 仓库校验）」一节
-
-插件包（pnpm 仓库校验）
-  已核对      309 个包 · 27,705 个文件 · 硬链接完好 27,703
-  被改过      1 个文件
-    ~ @njjpro/dsh-remote-workspace\lib/index.js（内容与原件不同）
-  多余/副本   1 个
-    + @njjpro/dsh-remote-workspace\lib/index.js.bak-20261026091204  备份副本（内容与仓库原件相同）
-  名册对账    声明 359 · 实际 309 · 孤儿 0 · 缺失 0 · 版本不符 0
-
-插件数据目录（占多少 / 这次多了多少）
-  dsh-bottom-info-bar         10.7MB        —  最近写入 2026-10-28
-  our-free-model             220.7KB        —  最近写入 2026-10-28
-  dsh-continue               178.2KB    +155B  最近写入 2026-10-28
-
-会话
-  46 个会话 · 3 个工作区 · 36.5MB
-
-残留（A 档 5 · B 档 2 · 合计 553.1MB）
-   1  B  updater:dsh-desktop-updater\installer.exe  276.0MB  已下载的更新包
-   ...
-~~~
-
-agent 模式（`--agent`，固定两行以内）：
-
-~~~
-PURITY v0.1.0 dsh=44.7.0 roots=8 files=53625 residue=7/553.1MB unknown=0 sessions=46/36.5MB purity=3 plugins=309/2 next=review
-~~~
-
-## 支持范围
-
-- Windows 10 / 11
-- DeepSeek Harness 桌面端（Electron 安装版与 portable 版）
-- node 三级回退：宿主提供的 `DSH_DESKTOP_NODE_EXECUTABLE` → 安装目录 Electron 主程序 + `ELECTRON_RUN_AS_NODE=1`（DSH 不自带独立 node.exe）→ PATH 中的 `node`
-
-非 Windows 平台不在首发范围：回收站、注册表发现都是 Windows 专有实现。引擎层已按可移植方式组织，后续可扩展。
-
-## 文档
-
-| 文件 | 内容 |
+| Artifact | Location |
 |---|---|
-| [docs/design.md](docs/design.md) | 设计总览：形态决策、四层处理、增量与成本模型 |
-| [docs/tiers.md](docs/tiers.md) | 分级定义、判据清单、硬边界与边界案例 |
-| [docs/cli.md](docs/cli.md) | 命令契约、输出格式、退出码 |
-| [docs/state.md](docs/state.md) | 状态文件与知识库 schema、经验回流 |
-| [docs/roadmap.md](docs/roadmap.md) | P0–P4 阶段与验收标准 |
+| Program | `%LOCALAPPDATA%\dsh-clean\app\` |
+| DSH skill | `%USERPROFILE%\.dsh\skills\dsh-clean\` |
+| Install record (used by uninstall) | `%LOCALAPPDATA%\dsh-clean\app\install.json` |
+| Scan state and reports | the current workspace, `Temp\dsh-clean\` by default |
 
-## 安全承诺
+The program is copied out of the download folder, so the folder can be deleted afterwards.
 
-- 任何删除动作**只进 Windows 回收站**，可从回收站还原
-- 不是本工具生成的文件，只报告、不处置
-- 半成品保护：10 分钟内写过的文件一律不判残留、不动
-- 被占用的条目记为 LOCKED 并跳过，不重试、不报错
+## Usage
+
+Inside DSH, type `/dsh-clean` (or just say "scan my DSH for leftovers"). The assistant runs the scan, reports in Chinese or English, and executes only what you approve.
+
+Without a conversation, double-click `dsh-clean.cmd` for an interactive console session, or call the CLI directly:
+
+| Command | Purpose |
+|---|---|
+| `scan` | Read-only inventory and report |
+| `review` / `apply` | Show the cleanup list / send selected items to the Recycle Bin |
+| `judge` / `unjudge` | Record or revoke a decision so it is not re-asked |
+| `verify` | Compare the client against the installer (`--installer` or `--upstream`) |
+| `prune` | Retire old reports and legacy state |
+| `export-learning` | Export anonymised cases as a PR-ready fragment |
+| `install` / `uninstall` | Deploy or remove the program and the skill |
+
+The full command contract lives in [docs/cli.md](docs/cli.md).
+
+Sample human output (excerpt):
+
+~~~
+DSH-clean v0.2.0 - 2026-11-02 12:00
+
+Environment
+  DSH Desktop   0.2.1-rc.3
+  DSH runtime   44.7.0
+  Footprint     3.7GB - 53,625 files - since last run +34.4KB - 0.9s
+
+DSH folders (8)
+  install            D:\Software\DeepSeek Harness               1.0GB  client install - launcher
+  data               ~\.dsh                                     2.0GB  user data - default
+
+Residue (A 1 - B 0 - 183B)
+   1  A          183B  timestamp backup
+     C:\Users\User\.dsh\our-free-model\magpie\config\magpie\settings.json.bak
+~~~
+
+Agent output (`--agent`, two lines at most):
+
+~~~
+PURITY v0.2.0 dsh=44.7.0 roots=10 files=50792 residue=1/0B unknown=0 sessions=11/32.4MB purity=0 integrity=ok plugins=182/0 patch=0/0 probe=+3/0 locked=0 known=0 leftover=0 next=review cfgbad=1
+~~~
+
+## Uninstall
+
+Double-click `uninstall.cmd`. It removes the program, the skill, and the install record together - no orphan skill is left behind. Scan state and reports under `Temp\dsh-clean\` are yours to keep or delete; the tool does not touch them.
+
+## How DSH-clean finds Node
+
+DSH does not ship a standalone `node.exe`; DSH-clean reuses whatever runtime is available, in this order:
+
+| Priority | Source |
+|---|---|
+| 1 | `DSH_DESKTOP_NODE_EXECUTABLE` (set automatically when the tool runs inside a DSH session) |
+| 2 | `node` on PATH |
+| 3 | `DeepSeek Harness.exe` in common install locations, started with `ELECTRON_RUN_AS_NODE=1` |
+
+The resolved runtime is cached in `%LOCALAPPDATA%\dsh-clean\node-path.txt` so later runs skip the search.
+
+## Safety
+
+- Every deletion goes to the **Windows Recycle Bin** and can be restored.
+- Files the tool did not create are reported, never removed.
+- Anything written within the last 10 minutes is never classified as residue.
+- Locked items are marked LOCKED and skipped - no retries, no errors.
+- The tool never edits DSH configuration files (stale patch rows are report-only).
+
+## Known limitations
+
+- **Custom install path without Node** - if DSH lives outside the default locations and `node` is not on PATH, the launcher stops with `Cannot find a Node runtime`. Fix: put `node` on PATH, or set `DSH_DESKTOP_NODE_EXECUTABLE` to your `DeepSeek Harness.exe`.
+- **Execution policy and antivirus** - `install.cmd` runs the bundled script with `-ExecutionPolicy Bypass` to survive restrictive policies; copying files into your user profile may still raise an antivirus prompt.
+- **Windows only** - the Recycle Bin and registry discovery are Windows-specific. The engine is organised to be portable, but no other platform is supported yet.
+
+## Documentation
+
+| File | Contents |
+|---|---|
+| [docs/design.md](docs/design.md) | Design overview: shape decisions, four-layer processing, incremental and cost models |
+| [docs/tiers.md](docs/tiers.md) | Tier definitions, rule list, hard boundaries, edge cases |
+| [docs/cli.md](docs/cli.md) | Command contract, output formats, exit codes |
+| [docs/state.md](docs/state.md) | State files and knowledge-base schemas, learning loop |
+| [docs/roadmap.md](docs/roadmap.md) | P0-P4 phases and acceptance criteria |
+
+## Versioning and releases
+
+- Current version: **0.2.0** (`lib/version.mjs`), release tag: **0.2**.
+- Each release ships `dsh-clean-0.2.0.zip` and `SHA256SUMS.txt` as GitHub Release assets; the ZIP is produced from the tag with `git archive`, so it contains exactly the tagged tree (tests and tooling are excluded via `.gitattributes`).
+- Verify a download before running it:
+
+~~~powershell
+Get-FileHash .\dsh-clean-0.2.0.zip -Algorithm SHA256
+Get-Content .\SHA256SUMS.txt
+~~~
+
+- Build a release locally: `powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.2`.
+
+(待补充：tag 是否统一改成 `v0.2.0` 形式；目前沿用 `0.1` 的短格式 `0.2`，与 `VERSION` 0.2.0 的对应关系是「去掉补丁位」。)
 
 ## License
 
-MIT
-## 功能
-
-- **卸载遗留物**：插件删掉后留在 `~/.dsh` 里的数据目录/文件，用名册里的「已卸载」记录认领，报出来带体积与归属。
-- **启动层死行**：`cordis.patch.yml` 指向已消失的包只报告、不改文件，也永不进清理清单。
-
-- **升级遗留物检测**：扫描自动发现 dsh-ops 受限 MSYS 缓存里的死缓存（identity 与当前收据不匹配 / 暂存中断），进入残留清单，清理走回收站。
+MIT © 2026 Morgan00GZ - see [LICENSE](LICENSE).

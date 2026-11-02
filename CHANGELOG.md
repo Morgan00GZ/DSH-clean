@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-02
+
+### 发布与分发 - 0.2
+
+- 文档拆成英文 `README.md` + 中文 `README.zh-CN.md`（GitHub 惯例，英文为默认入口，两版逐节对应）
+- 新增 `tools/release.ps1`：按 tag 用 `git archive` 生成 `dsh-clean-<版本>.zip` 与 `SHA256SUMS.txt`；测试与开发脚本由 `.gitattributes` 的 `export-ignore` 排除在 ZIP 之外
+- 版本号 `0.1.0` → `0.2.0`；发布 tag `0.2`
+- README 快速开始改为「Releases 下载 ZIP → 解压 → 双击 install.cmd」，clone 降为开发者选项
+
 ### 修复 - 报告可读性与升级丢补丁的处置
 
 - `PATCH-LOST` 不再只说「见报告」：报告「已知改动」段给出两条出路（重新打补丁后 `accept` 重登记 / `unaccept` 去掉记录），简报里也有同样的一行处置建议

@@ -1,3 +1,8 @@
 * text=auto eol=lf
 *.cmd text eol=crlf
 *.ps1 text eol=crlf
+
+# 发布 ZIP（git archive）不打包开发用文件
+tests/ export-ignore
+tools/ export-ignore
+archives/ export-ignore

@@ -222,7 +222,7 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 **只读第一行和最后一行**。第一行是稳定契约：
 
 ~~~
-PURITY v0.1.0 dsh=44.7.0 roots=12 files=52017 residue=0/0B unknown=0 sessions=53/41.5MB purity=0 integrity=ok plugins=266/0 patch=1/0 probe=+3/0 locked=0 known=0 next=none
+PURITY v0.2.0 dsh=44.7.0 roots=12 files=52017 residue=0/0B unknown=0 sessions=53/41.5MB purity=0 integrity=ok plugins=266/0 patch=1/0 probe=+3/0 locked=0 known=0 next=none
 ~~~
 
 - 字段名、顺序固定；**新增字段只能追加到行尾**
@@ -290,7 +290,7 @@ dsh-clean.cmd apply --tier A --dry-run
 
 ~~~
 > dsh-clean.cmd scan --agent
-PURITY v0.1.0 dsh=44.7.0 roots=7 files=41208 changed=12 keep=41002 cache=186 residue=3/1.2GB unknown=4 locked=0 next=review
+PURITY v0.2.0 dsh=44.7.0 roots=7 files=41208 changed=12 keep=41002 cache=186 residue=3/1.2GB unknown=4 locked=0 next=review
 ~~~
 
 ## 退出码与 CI 用法
