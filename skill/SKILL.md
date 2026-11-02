@@ -1,6 +1,6 @@
 ---
 name: dsh-clean
-description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用，找出卸载残留、冗余文件，以及与安装包不一致的改动。当用户提到「DSH 不干净 / 有残留 / 卸载插件没卸干净 / 占了多少空间 / 客户端有没有被改过 / 清理 DSH」时使用。默认只读；用户明确要清理时才用 review/apply，删除一律进回收站。 Audit and clean the DeepSeek Harness Desktop footprint on Windows: owned folders, uninstall/upgrade leftovers, installer drift. Read-only by default; deletions go to the Recycle Bin.
+description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用，找出卸载残留、冗余文件，以及与安装包不一致的改动。当用户提到「DSH 不干净 / 有残留 / 卸载插件没卸干净 / 占了多少空间 / 客户端有没有被改过 / 清理 DSH」时使用。默认只读；用户明确要清理时才用 review/apply，删除一律进回收站。 Audit and clean the DeepSeek Harness Desktop footprint on Windows — owned folders, uninstall/upgrade leftovers, installer drift. Read-only by default; deletions go to the Recycle Bin.
 ---
 
 # DSH-clean
