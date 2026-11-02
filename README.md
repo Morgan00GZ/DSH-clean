@@ -167,8 +167,8 @@ Get-Content .\SHA256SUMS.txt
 ~~~
 
 - Build a release locally: `powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.3`.
-- Push commits and tags from Windows: double-click `tools\push.cmd` (it shows what will be pushed and asks first; `--dry-run` only previews). On first run it may ask for the path to DeepSeek Harness.exe and remembers it in `%LOCALAPPDATA%\dsh-clean\node-path.txt`.
-- Publish the GitHub Release for tag `0.3`: double-click `tools\release-github.cmd` (needs GitHub CLI: `winget install --id GitHub.cli`, then `gh auth login`). It uploads `archives\dsh-clean-0.3.0.zip` and `SHA256SUMS.txt`, and is idempotent.
+- Push commits and tags from Windows: double-click `tools\push.cmd`. Git only — no Node, no PowerShell runtime needed. It shows what changed, commits with `chore: sync local changes` unless you pass a message, then pushes the current branch and all tags. `--dry-run` previews and pushes nothing.
+- Publish the GitHub Release for tag `0.3`: double-click `tools\release-gh.cmd`. No GitHub CLI needed — it calls the REST API; the token comes from `-Token`, the `GITHUB_TOKEN` variable, or the git credential store (push once first and it is there). It uploads `archives\dsh-clean-0.3.0.zip` and `SHA256SUMS.txt`; `-Force` overwrites notes and re-uploads.
 
 (待补充：tag 是否统一改成 `v0.3.0` 形式；目前沿用 `0.1` 的短格式（`0.2`、`0.3`），与 `VERSION` 0.3.0 的对应关系是「去掉补丁位」。)
 

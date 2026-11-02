@@ -6,10 +6,10 @@
 
 ### 发布工具 - 推送与挂 Release
 
-- 新增 `tools/push.cmd` + `tools/push-github.mjs`：先列出领先提交数与待推 tag，确认后 `git push -u origin <branch>` + `git push origin --tags`；`--dry-run` 只预览，`--yes` 免询问
-- 新增 `tools/release-github.cmd` + `tools/release-github.mjs`：只发布 tag `0.3`；校验本地/远程 tag、ZIP 与校验和、`gh` 可用与登录状态，Release 说明自动取自 `CHANGELOG.md` 的 `[0.3.0]` 段；已存在则覆盖上传资产（幂等）
-- 新增 tools/launch-tool.ps1：找 Node 的顺序为 环境变量 → PATH 里的 node → %LOCALAPPDATA%\dsh-clean\node-path.txt 缓存 → 标准安装目录 → 注册表；都没有时问一次 DeepSeek Harness.exe 路径并写入缓存（lib/launch.ps1 也读该缓存，修掉自定义安装路径下找不到 Node 的问题）
-- 两个工具都用 `--dry-run` / `--yes` 控制，`DSH_CLEAN_GIT` / `DSH_CLEAN_GH` 可覆盖可执行文件路径；`tools/` 仍被 `.gitattributes` 排除在发行 ZIP 外
+- `tools/push.cmd`：双击即推送，只用 git（不需要 Node，也不需要 PowerShell）。先 `git status --short`，然后 `git add -A` + `git commit -m "chore: sync local changes"`（可直接传自己的提交信息；没有新改动也继续推），最后 `git push -u origin <当前分支>` + `git push origin --tags`；`--dry-run` 只列出分支、领先提交数与本地 tag
+- `tools/release-gh.cmd` + `tools/release-gh.ps1`：只发布 tag `0.3`；走 GitHub REST API（不需要 `gh` CLI），令牌依次取 `-Token`、`GITHUB_TOKEN`、git 凭据管理器；Release 说明自动取自 `CHANGELOG.md` 的 `[0.3.0]` 段；上传 `dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt`，同名旧附件先删后传（可重复执行），`-Force` 覆盖说明，`-DryRun` 不联网
+- git 查找顺序：工作区的 `..\..\PortableGit` → `..\PortableGit` → `.\PortableGit` → PATH；都找不到时打印具体修复提示
+- `tools/` 仍被 `.gitattributes` 排除在发行 ZIP 外
 
 ## [0.3.0] - 2026-11-02
 
