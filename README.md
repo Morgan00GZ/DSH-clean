@@ -164,13 +164,5 @@ PURITY v0.1.0 dsh=44.7.0 roots=8 files=53625 residue=7/553.1MB unknown=0 session
 MIT
 ## 功能
 
-### 可选面板（P4）
-
-仓库 `plugin/` 是一个 DSH 插件「dsh-clean-report」，注册只读工具 `dsh_clean_report`。
-它读取最近一次扫描报告，不重新扫描、不清理，在对话里随时可看「上次扫描结果」。
-插件不含扫描/判据/清理逻辑，坏掉也不影响主链路。
-
-> 插件**不能**声明 `@deepseek-ai/*` 作为 peerDependency：DSH 会据此把宿主副本链接进 profile，指向 `app.asar`（是文件不是目录），让 `pnpm install` 抛 `[ENOTDIR]` 崩掉。扫描器现在会把这类链接报成风险项。
-
 
 - **升级遗留物检测**：扫描自动发现 dsh-ops 受限 MSYS 缓存里的死缓存（identity 与当前收据不匹配 / 暂存中断），进入残留清单，清理走回收站。

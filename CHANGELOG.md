@@ -4,27 +4,9 @@
 
 ## [Unreleased]
 
-### P4 - 只读报告插件（dsh-clean-report）
+### P4 - 只读报告插件（已撤销）
 
-- 新增 plugin/ 目录：DSH 插件「dsh-clean-report」，注册只读工具 dsh_clean_report
-- 工具读取最近一次扫描报告（不重新扫描、不清理），按 section 取段（summary/residue/folders/plugins/sessions/purity，默认残留+未归类）
-- 插件自身不含扫描/判据/清理逻辑，坏掉时主链路不受影响
-- 安装：dsh plugin --profile desktop add file:<repo>/plugin（需 dsh.bundle.patch 才会进 profile 层）
-- 已验证：schema 通过 assertSupportedJsonSchema、纯逻辑对真实报告数据正确取段
-
-### 修复 - 插件装上却不出现在工具列表（ctx.tools 未 inject）
-
-- 现象：插件 bundle 层正常叠加（composed row 里有 `dsh-clean-report`）、模块能 import、schema 全过，但客户端重启后会话工具列表里始终没有 `dsh_clean_report`
-- 根因：cordis 只把**声明过依赖**的服务暴露给插件。插件在 `apply` 里直接读 `ctx.tools` 会抛 `cannot get property "tools" without inject`，apply 失败 → 工具从未注册。错误被宿主吞掉，UI 上也看不出异常
-- 修法：`ctx.inject(["tools"], (scoped) => registerReportTool(scoped))`，等 tools 服务就绪再注册（与 dsh-ops 的 `root.inject(['tools'], …)` 同一写法）
-- 复现与验证手段（新增，无需动用户的客户端）：临时 profile（bundles = dsh-base + dsh-ops + 本插件，node_modules 用 junction 指向真实包）+ `boot()` 无头启动，读 `ctx.get("tools").view().visible`。修复前 25 个工具无本工具、修复后 26 个含 `dsh_clean_report`
-
-### 修复 - 插件 v0.2.0（会阻塞 pnpm install 的宿主链接）
-
-- 根因：插件声明了 `@deepseek-ai/dsh-tools` 作为 peerDependency，DSH 安装器会把安装目录里的宿主副本链接进 profile（`node_modules/@deepseek-ai/dsh-tools` → `...\resources\app.asar\dsh\node_modules\...`）。app.asar 是文件不是目录，pnpm 把它当 lockfile 之外的包去读 manifest，逐级上溯父目录时抛 `[ENOTDIR] ... app.asar is not a directory`，整个 `pnpm install` 中止
-- 修法：插件去掉全部 `@deepseek-ai/*` peerDependencies（运行时宿主 loader 本来就能解析，其它已装插件都没这条链接），并改用普通工具对象 `ctx.tools.register({...})`，不再 import 宿主包
-- 同时修掉一个装上去就会加载失败的问题：value schema DSL 不允许**根级** `required`（`schema.required is not supported by the value schema DSL`），v0.1.0 的 `output.schema` 带了根级 required，defineTool 编译即抛错——因为装完一直没重启，没暴露
-- plugin/package.json → 0.2.0；部署副本已刷新（`--force` 刷不动 injected 副本，需删掉 `node_modules/dsh-clean-report` 再 install）
+- 试做过 `dsh-clean-report` 插件（注册只读工具 `dsh_clean_report`，读取最近一次扫描报告），因工具在客户端里始终注册不上，已整体移除：仓库不再有 `plugin/`，交互恢复为纯文字（命令 + 报告文件）
 
 ### P1 - 符号链接体检
 
