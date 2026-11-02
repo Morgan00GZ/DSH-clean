@@ -6,7 +6,7 @@
 
 ### 发布工具 - 推送与挂 Release
 
-- `tools/push.cmd`：双击即推送，只用 git（不需要 Node，也不需要 PowerShell）。先 `git status --short`，然后 `git add -A` + `git commit -m "chore: sync local changes"`（可直接传自己的提交信息；没有新改动也继续推），最后 `git push -u origin <当前分支>` + `git push origin --tags`；`--dry-run` 只列出分支、领先提交数与本地 tag
+- `tools/push.cmd`：双击即推送，只用 git（不需要 Node，也不需要 PowerShell）。先 `git status --short`，然后 `git add -A` + `git commit -m "chore: sync local changes"`（可直接传自己的提交信息；没有新改动也继续推），再推当前分支与全部 tag；推送前会 `git fetch`，远端有本地没有的提交时列出双方的提交并问是否用本地覆盖（`--force` 跳过询问，用 `--force-with-lease`）；`--dry-run` 只列出分支、领先提交数与本地 tag
 - `tools/release-gh.cmd` + `tools/release-gh.ps1`：只发布 tag `0.3`；走 GitHub REST API（不需要 `gh` CLI），令牌依次取 `-Token`、`GITHUB_TOKEN`、git 凭据管理器；Release 说明自动取自 `CHANGELOG.md` 的 `[0.3.0]` 段；上传 `dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt`，同名旧附件先删后传（可重复执行），`-Force` 覆盖说明，`-DryRun` 不联网
 - git 查找顺序：工作区的 `..\..\PortableGit` → `..\PortableGit` → `.\PortableGit` → PATH；都找不到时打印具体修复提示
 - `tools/` 仍被 `.gitattributes` 排除在发行 ZIP 外
@@ -20,6 +20,7 @@
 - 技能 `description` 补一句英文，方便英文语境的触发
 - 顺手修正文案：回归测试用例数 13 → 15（实际 15 个）
 - README 两版「已知限制」新增一条：CLI 控制台与 `report.md` 仍为中文，助手按用户语言汇报；CLI 自身英文输出尚未实现
+- 修复（打包后补入）：技能 `SKILL.md` 的 `description` 里用了半角冒号（`on Windows: owned…`），YAML 纯标量解析失败会让技能被静默丢弃、列表里看不到；已改为破折号，并把 tag `0.3` 与发行 ZIP 重建在该修复上
 
 ### 发布与分发 - 0.3
 
