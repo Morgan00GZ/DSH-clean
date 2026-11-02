@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### 发布工具 - 推送与挂 Release
+
+- 新增 `tools/push.cmd` + `tools/push-github.mjs`：先列出领先提交数与待推 tag，确认后 `git push -u origin <branch>` + `git push origin --tags`；`--dry-run` 只预览，`--yes` 免询问
+- 新增 `tools/release-github.cmd` + `tools/release-github.mjs`：只发布 tag `0.3`；校验本地/远程 tag、ZIP 与校验和、`gh` 可用与登录状态，Release 说明自动取自 `CHANGELOG.md` 的 `[0.3.0]` 段；已存在则覆盖上传资产（幂等）
+- 两个工具都用 `--dry-run` / `--yes` 控制，`DSH_CLEAN_GIT` / `DSH_CLEAN_GH` 可覆盖可执行文件路径；`tools/` 仍被 `.gitattributes` 排除在发行 ZIP 外
+
 ## [0.3.0] - 2026-11-02
 
 ### 修复 - 非中文用户的汇报语言
