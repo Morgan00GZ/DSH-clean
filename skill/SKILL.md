@@ -9,13 +9,21 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 ## 执行入口（先看这里，别去找工具）
 
-命令都在**你手上已有的工具**里跑，一次调用就够：
+**先看一次工具表选分支，不要试错。** 三条分支互斥：
 
-- 有 `ops_bash` 就直接用（`command` 传下面那行命令）；PTC 模式下是 `run_code` 里的 `tools.ops_bash`。
+| 工具表里有 | 走哪条 |
+| --- | --- |
+| `ops_bash`（PTC 下是 `run_code` 里的 `tools.ops_bash`） | 分支 A：直接跑命令，见下面「执行」 |
+| 没有 shell，但有 `ops_read_files` / `ops_inspect_local_file` | 分支 B：只读汇报，见「没有 shell 时」 |
+| 两个都没有 | 分支 C：一句话说明本会话缺命令工具、给一个双击入口，然后停 |
+
+三条分支都要守的规矩：
+
 - **不要**用 `ops_discover_tools` 找 shell / bash / 终端：它永远匹配不到，只会白跑十几步（真实案例：一次会话 3/4 的 token 耗在这里）。
 - **不要**中途订阅新工具（`ops_load_sdk`、`ops_discover_tools` 选中）。工具表一变前缀缓存全废，之后每一步都按全价重付。
 - **不要**调 `mcp_connector_catalog`、列插件清单之类与本任务无关的工具。
-- 常态会话固定 3 步：① 一条 `scan --agent`；② `present` 报告文件卡；③ 按结论回话（行尾有 `reports=N/prune` 就顺手 prune）。
+- PTC 只是**更快**（命令直连、审批链更短），不是前置条件；标准模式走不到分支 A 就走分支 B，不要因此拒绝任务、也不要让用户去别的会话重跑。
+- 分支 A 的常态会话固定 3 步：① 一条 `scan --agent`；② `present` 报告文件卡；③ 按结论回话（行尾有 `reports=N/prune` 就顺手 prune）。
 
 ## 执行
 
@@ -49,12 +57,24 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 **不要**主动把 report.md 整份读进上下文（约 13KB ≈ 4k token）—— 用户追问哪块就用上面那条 `--section=`。
 
+## 没有 shell 时（标准模式只读汇报）
+
+工具表里没有 `ops_bash` / `run_code`，但有 `ops_read_files`（目前标准模式会话就是这样）。**不要空转、不要臆测扫描结果、也不要让用户换个会话重跑**，改用读文件把上一次的结论讲清楚：
+
+1. 读状态摘要（一次调用）：`ops_read_files` 读 `<状态目录>\last-run.json`，里面的 `line` 字段就是上次的 `PURITY …` 结论行。状态目录默认是 `D:\DeepSeek Harness\Temp\dsh-clean`（拿不准就先看 `C:\Users\User\AppData\Local\dsh-clean\install.json` 的 `stateDir`）。
+2. 取最新报告：列 `<状态目录>\reports\`，挑名字最大（时间最新）的那个目录，读它的 `report.md` **前 60 行**即可；不要整份读（约 13KB ≈ 4k token）。
+3. 汇报：先说清「这是上次扫描（时间）的结论」，再给数字 —— `files=` 文件数、`bytes=` 占用、`residue=` 残留、`purity=` 纯净度、`plugins=` 插件；然后照常用 `present` 把那份 `report.md` 交出去。
+4. 用户要**最新**状态时，只给一个图形动作（他不看命令行）：
+   「双击 `scan.cmd` 跑一次（或工作区里的 `dsh-clean.cmd`），跑完告诉我一声」
+   用户回来说跑完了，再回到第 1 步读新报告。
+5. 这一分支**做不了**清理（review/apply/prune 要起子进程）：直说「清理要命令工具，请在有 shell 的会话里做，或双击 `apply.cmd`」，不要把清理说成已经做了。
 ## 怎么汇报
 
 - 用用户消息所用的语言汇报（用户说中文就说中文，说英文就说英文）。
 - 路径保留 Windows 反斜杠，体积用 GB/MB。
 - 工具自身的输出是中文；向非中文用户汇报时按需翻译或概述，不要整段照抄中文。
-- 先一句话结论（干净 / 有 N 处残留 / 有 N 处要你确认），再最多列 3 条细节。
+- 先一句话结论（干净 / 有 N 处残留 / 有 N 处要你确认），紧跟一行关键数字：`files=` / `bytes=` / `seconds=` / `report=`（都从 scan 输出抄，不要自己重算、不要猜）。
+- 再最多列 3 条细节。
 - 每条讲三件事：它像什么、为什么可疑、动了会怎样。
 - 超过 3 条只报总数，问用户要不要看完整清单。
 
@@ -124,7 +144,7 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
    {{DSH_CLEAN_CMD}} apply --ids=1,3 --yes
    ```
 
-   - 这一步必须带 `sandbox_permissions=danger-full-access`（要从 Node 启 PowerShell 删东西）。**没有放宽沙箱时工具会报「没删成 … EPERM」，那不是失败信息，是让你换权限重跑。**
+   - 这条命令**第一次就带** `sandbox_permissions: "danger-full-access"` 和一句 justification（删除动作在工作区外、要进回收站）。多弹一次审批是正常的，但**只申请一次**：审批被拒、或仍报「没删成 … EPERM」、或退出码 `3`，就停下来告诉用户「这一步需要放宽沙箱权限」，**不要重试第二次**，也不要换 `cmd /c`、`powershell -File` 之类的写法绕。
    - 退出码：`0` 全部进箱 / `2` 有项没进箱 / `3` 沙箱挡着 / `4` 回收站不可写（未删任何东西）。
    - 结果里每项要么「已进回收站 #N → $RXXXXXX」，要么「失败 [PERMANENT-DELETE]」—— 后者要立刻告诉用户「这项没进回收站」，不要含糊过去。
    - 汇报三句话：清了几项、腾出多少空间、**回收站里可以还原**。再补一句台账位置（`<state>\apply-log.jsonl`）。
@@ -141,7 +161,7 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 它会：
 
-- 历史报告只留最近 10 份（`--keep=N` 可改），其余进回收站
+- 历史报告只留最近 20 份（`--keep=N` 可改），其余进回收站
 - 旧状态文件（`%LOCALAPPDATA%\dsh-clean` 下的 roots / patches / probe-cache / last-run / sizes / inventory / reports 等）先补到新状态目录、确认没丢，再收走
 
 全部进回收站、可还原，属于例行维护，不需要用户批准。汇报时一句话带过即可（「顺手收走了 N 份旧报告」）。`PRUNE … ok=1` 说明成功；退出码 4 才是没做成。
@@ -175,4 +195,4 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 ## 回归测试
 
-改过判据就顺手跑一次 `tests\run.cmd`（当前 15 个用例，几秒），全绿再上真机。
+改过判据就顺手跑一次 `tests\run.cmd`（当前 18 个用例，几秒），全绿再上真机。

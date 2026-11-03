@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### 技能 - 标准模式不再空转（能力分支）
+
+- `skill/SKILL.md` 的「执行入口」从「必须有 shell」改成三分支：有 `ops_bash` → 直接扫描；**没有 shell 但有 `ops_read_files`** → 只读汇报（读 `<状态目录>\last-run.json` 的结论行 + 最新 `report.md` 前 60 行，再用 `present` 交报告；需要新数据时给用户一个双击入口）；两者都没有 → 一句话收尾。PTC 只作「更快」提示，不再是前置条件，也不许让用户换会话重跑
+- 清理（`review` / `apply` / `prune`）明确「要命令工具」：只读分支不许把清理说成已完成；`apply` **第一次就带** `danger-full-access`，审批被拒或退出码 `3` 只报告不重试
+- `prune` 默认保留报告 10 → 20 份（`lib/prune.mjs` 的 `KEEP_DEFAULT`、`lib/report.mjs` 的 `REPORT_KEEP`），`--keep=N` 仍可覆盖
+- 汇报固定带 `files` / `bytes` / `seconds` / `report` 四个数字（从 scan 输出抄，不重算）
+- 背景：标准模式会话（`agent-preset/selected: standard`）工具表只有文件类工具，没有 `ops_bash` / `pwsh` / `run_code`；旧技能在这种会话里要么让 agent 空转，要么让用户换会话
 ### 修复 - 安装不再分裂状态目录
 
 - `install` 的状态目录改为「只定一次」：`--state-dir` → 上次安装记录 → 首次安装时的 `<当前目录>\Temp\dsh-clean`。以前每次都由 cwd 推导，从不同目录重装会生成第二个状态目录，基线（`baseline.json`）、判例、名册、报告全对不上，纯净度会误报「新增」
