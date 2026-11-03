@@ -4,7 +4,9 @@
 
 状态目录默认放在**工作区里**（`<当前目录>\Temp\dsh-clean\`），程序与安装记录留在 `%LOCALAPPDATA%\dsh-clean`。这样日常扫描只写工作区，不需要放宽沙箱；只有 install / uninstall 要动工作区外的两处。
 
-解析顺序：`--state-dir` → 环境变量 `DSH_CLEAN_STATE` → 安装记录里的 `stateDir` → `<当前目录>\Temp\dsh-clean`。
+状态目录**只在第一次安装时按当前目录定下**，之后固定写在 `install.json` 里：换个目录重装也沿用同一个（否则会分裂出第二个状态目录，基线 / 判例 / 报告全部对不上）。要换位置就显式给 `--state-dir`。
+
+解析顺序：`--state-dir` → 环境变量 `DSH_CLEAN_STATE` → 安装记录里的 `stateDir` → `<当前目录>\Temp\dsh-clean`。其中 `install` 用的是 `--state-dir` → 上次安装记录 → `<当前目录>\Temp\dsh-clean`（不读环境变量，避免一次安装就把位置定错）。
 
 旧的 `%LOCALAPPDATA%\dsh-clean` 布局里的状态会在 `install` 时**只补不覆盖**地移到新目录（roots / patches / roster / probe-cache / last-run 与 reports / inventory），旧文件不删；确认无误后跑 `prune` 统一收走（见下）。
 

@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### 修复 - 安装不再分裂状态目录
+
+- `install` 的状态目录改为「只定一次」：`--state-dir` → 上次安装记录 → 首次安装时的 `<当前目录>\Temp\dsh-clean`。以前每次都由 cwd 推导，从不同目录重装会生成第二个状态目录，基线（`baseline.json`）、判例、名册、报告全对不上，纯净度会误报「新增」
+- 抽出 `resolveInstallStateDir()` 并补 3 条回归用例（首次 / 沿用记录 / 显式优先），测试 15 → 18
+- `docs/state.md` 写明状态目录固定与解析顺序
+
 ### 技能 - 省 token（执行入口 + 3 步流程）
 
 - 新增「执行入口」段：明确命令在手上已有的 `ops_bash`（PTC 下是 `run_code` 里的 `tools.ops_bash`）里跑，禁止用 `ops_discover_tools` 找 shell、禁止中途订阅新工具、禁止调与本任务无关的工具；常态会话固定 3 步（`scan --agent` → `present` → 回话，有 `reports=N/prune` 顺手 prune）
