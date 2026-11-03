@@ -23,6 +23,8 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 - **不要**中途订阅新工具（`ops_load_sdk`、`ops_discover_tools` 选中）。工具表一变前缀缓存全废，之后每一步都按全价重付。
 - **不要**调 `mcp_connector_catalog`、列插件清单之类与本任务无关的工具。
 - PTC 只是**更快**（命令直连、审批链更短），不是前置条件；标准模式走不到分支 A 就走分支 B，不要因此拒绝任务、也不要让用户去别的会话重跑。
+
+- **新建会话时选对 preset，不要中途切换**：工具集在会话创建时就固定（`agent-preset/selected` 在创建时选定），会话中途切 preset 不会刷新工具表。要在本会话直接跑命令，请**新建**一个带 `ops_bash` 的会话（PTC 或含 shell 的 preset），不要在已有会话里切模式。
 - 分支 A 的常态会话固定 3 步：① 一条 `scan --agent`；② `present` 报告文件卡；③ 按结论回话（行尾有 `reports=N/prune` 就顺手 prune）。
 
 ## 执行

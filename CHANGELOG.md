@@ -2,7 +2,7 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [0.3.1] - 2026-11-03
 
 ### 技能 - 标准模式不再空转（能力分支）
 
@@ -26,9 +26,15 @@
 ### 发布工具 - 推送与挂 Release
 
 - `tools/push.cmd`：双击即推送，只用 git（不需要 Node，也不需要 PowerShell）。先 `git status --short`，然后 `git add -A` + `git commit -m "chore: sync local changes"`（可直接传自己的提交信息；没有新改动也继续推），再推当前分支与全部 tag；推送前会 `git fetch`，远端有本地没有的提交时列出双方的提交并问是否用本地覆盖（`--force` 跳过询问，用 `--force-with-lease`）；`--dry-run` 只列出分支、领先提交数与本地 tag
-- `tools/release-gh.cmd` + `tools/release-gh.ps1`：只发布 tag `0.3`；走 GitHub REST API（不需要 `gh` CLI），令牌依次取 `-Token`、`GITHUB_TOKEN`、git 凭据管理器；Release 说明自动取自 `CHANGELOG.md` 的 `[0.3.0]` 段；上传 `dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt`，同名旧附件先删后传（可重复执行），`-Force` 覆盖说明，`-DryRun` 不联网
+- `tools/release-gh.cmd` + `tools/release-gh.ps1`：只发布 tag `0.3.1`；走 GitHub REST API（不需要 `gh` CLI），令牌依次取 `-Token`、`GITHUB_TOKEN`、git 凭据管理器；Release 说明自动取自 `CHANGELOG.md` 的 `[0.3.1]` 段；上传 `dsh-clean-0.3.1.zip` 与 `SHA256SUMS.txt`，同名旧附件先删后传（可重复执行），`-Force` 覆盖说明，`-DryRun` 不联网
 - git 查找顺序：工作区的 `..\..\PortableGit` → `..\PortableGit` → `.\PortableGit` → PATH；都找不到时打印具体修复提示
 - `tools/` 仍被 `.gitattributes` 排除在发行 ZIP 外
+
+### 发布与分发 - 0.3.1
+
+- 版本号 `0.3.0` → `0.3.1`；发布 tag `0.3.1`
+- 文档精确化：README 两版「已知限制」新增「会话 preset 创建时固定」「纯净度校验优先用 Electron 的 `original-fs`」两条；`docs/cli.md` 交互模型段补 preset 提示；`skill/SKILL.md` 执行入口补「新建会话选对 preset，不要中途切换」
+- 发版说明：修复版，仅文档与提示措辞，无行为变更（判据、判例、清理通道不变）
 
 ## [0.3.0] - 2026-11-02
 

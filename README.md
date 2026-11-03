@@ -1,6 +1,6 @@
 # DSH-clean
 
-![version](https://img.shields.io/badge/version-0.3.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
+![version](https://img.shields.io/badge/version-0.3.1-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
 
 **Audit and clean the DeepSeek Harness Desktop footprint on Windows.**
 
@@ -47,7 +47,7 @@ Conditions 1-2 are prerequisites: without them, "clean" has no meaning.
 
 ## Installation
 
-1. Download `dsh-clean-0.3.0.zip` from [Releases](https://github.com/Morgan00GZ/DSH-clean/releases).
+1. Download `dsh-clean-0.3.1.zip` from [Releases](https://github.com/Morgan00GZ/DSH-clean/releases).
 2. Extract it to an ordinary folder - not `C:\Windows`, and not inside the DeepSeek Harness install directory.
 3. Double-click `install.cmd`.
 4. Restart DSH (or open a new session) and type `/dsh-clean`.
@@ -92,7 +92,7 @@ The full command contract lives in [docs/cli.md](docs/cli.md).
 Sample human output (excerpt):
 
 ~~~
-DSH-clean v0.3.0 - 2026-11-02 12:00
+DSH-clean v0.3.1 - 2026-11-03 12:00
 
 Environment
   DSH Desktop   0.2.1-rc.3
@@ -111,7 +111,7 @@ Residue (A 1 - B 0 - 183B)
 Agent output (`--agent`, two lines at most):
 
 ~~~
-PURITY v0.3.0 dsh=44.7.0 roots=10 files=50792 residue=1/0B unknown=0 sessions=11/32.4MB purity=0 integrity=ok plugins=182/0 patch=0/0 probe=+3/0 locked=0 known=0 leftover=0 next=review cfgbad=1
+PURITY v0.3.1 dsh=44.7.0 roots=10 files=50792 residue=1/0B unknown=0 sessions=11/32.4MB purity=0 integrity=ok plugins=182/0 patch=0/0 probe=+3/0 locked=0 known=0 leftover=0 next=review cfgbad=1
 ~~~
 
 ## Uninstall
@@ -144,6 +144,8 @@ The resolved runtime is cached in `%LOCALAPPDATA%\dsh-clean\node-path.txt` so la
 - **Execution policy and antivirus** - `install.cmd` runs the bundled script with `-ExecutionPolicy Bypass` to survive restrictive policies; copying files into your user profile may still raise an antivirus prompt.
 - **Chinese CLI output** - the console and `report.md` are written in Chinese; the assistant reports in your language and can translate on request, but an English CLI output is not implemented yet.
 - **Windows only** - the Recycle Bin and registry discovery are Windows-specific. The engine is organised to be portable, but no other platform is supported yet.
+- **Session preset is fixed at creation** - the tool set of a DSH session is chosen when the session is created and cannot be switched mid-session. A standard session may lack the command tools (`ops_bash`), so the skill falls back to a read-only report; to run a real scan with full output, create a new session with the PTC (or a preset that has `ops_bash`) rather than switching modes on an existing one.
+- **Purity check prefers Electron's `original-fs`** - the CLI is zero-dependency, but reading `app.asar` correctly needs the `original-fs` module that only exists inside Electron. Under a plain Node runtime those files appear as size-0 archives and purity may degrade to a size+time check; use the bundled launcher (Electron in Node mode) for full fidelity.
 
 ## Documentation
 
@@ -157,20 +159,20 @@ The resolved runtime is cached in `%LOCALAPPDATA%\dsh-clean\node-path.txt` so la
 
 ## Versioning and releases
 
-- Current version: **0.3.0** (`lib/version.mjs`), release tag: **0.3**.
-- Each release ships `dsh-clean-0.3.0.zip` and `SHA256SUMS.txt` as GitHub Release assets; the ZIP is produced from the tag with `git archive`, so it contains exactly the tagged tree (tests and tooling are excluded via `.gitattributes`).
+- Current version: **0.3.1** (`lib/version.mjs`), release tag: **0.3.1**.
+- Each release ships `dsh-clean-0.3.1.zip` and `SHA256SUMS.txt` as GitHub Release assets; the ZIP is produced from the tag with `git archive`, so it contains exactly the tagged tree (tests and tooling are excluded via `.gitattributes`).
 - Verify a download before running it:
 
 ~~~powershell
-Get-FileHash .\dsh-clean-0.3.0.zip -Algorithm SHA256
+Get-FileHash .\dsh-clean-0.3.1.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS.txt
 ~~~
 
-- Build a release locally: `powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.3`.
+- Build a release locally: `powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.3.1`.
 - Push commits and tags from Windows: double-click `tools\push.cmd`. Git only — no Node, no PowerShell runtime needed. It shows what changed, commits with `chore: sync local changes` unless you pass a message, then pushes the current branch and all tags. `--dry-run` previews and pushes nothing.
-- Publish the GitHub Release for tag `0.3`: double-click `tools\release-gh.cmd`. No GitHub CLI needed — it calls the REST API; the token comes from `-Token`, the `GITHUB_TOKEN` variable, or the git credential store (push once first and it is there). It uploads `archives\dsh-clean-0.3.0.zip` and `SHA256SUMS.txt`; `-Force` overwrites notes and re-uploads.
+- Publish the GitHub Release for tag `0.3.1`: double-click `tools\release-gh.cmd`. No GitHub CLI needed — it calls the REST API; the token comes from `-Token`, the `GITHUB_TOKEN` variable, or the git credential store (push once first and it is there). It uploads `archives\dsh-clean-0.3.0.zip` and `SHA256SUMS.txt`; `-Force` overwrites notes and re-uploads.
 
-(待补充：tag 是否统一改成 `v0.3.0` 形式；目前沿用 `0.1` 的短格式（`0.2`、`0.3`），与 `VERSION` 0.3.0 的对应关系是「去掉补丁位」。)
+（tag 沿用短格式：`0.3.1` 与 `VERSION` 0.3.1 的对应关系是「去掉补丁位」。）
 
 ## License
 

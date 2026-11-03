@@ -160,6 +160,8 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 
 默认**不进入问答**：扫描完就退出，把待确认项留成文件。问答只在显式运行 `review` 时出现，且随时可以用 DSH 会话替代。因此即使完全不用命令行，也不会缺失任何功能。
 
+> **会话 preset 创建时固定**：DSH 会话的工具集在创建时选定，中途切 preset 不刷新。标准会话可能没有 `ops_bash`，此时技能走只读汇报；要直接跑命令，请新建一个带 `ops_bash` 的会话（PTC 等）。
+
 
 ## 符号链接体检
 
@@ -222,7 +224,7 @@ dsh-clean.cmd verify --installer=<官方安装包.exe>
 **只读第一行和最后一行**。第一行是稳定契约：
 
 ~~~
-PURITY v0.3.0 dsh=44.7.0 roots=12 files=52017 residue=0/0B unknown=0 sessions=53/41.5MB purity=0 integrity=ok plugins=266/0 patch=1/0 probe=+3/0 locked=0 known=0 next=none
+PURITY v0.3.1 dsh=44.7.0 roots=12 files=52017 residue=0/0B unknown=0 sessions=53/41.5MB purity=0 integrity=ok plugins=266/0 patch=1/0 probe=+3/0 locked=0 known=0 next=none
 ~~~
 
 - 字段名、顺序固定；**新增字段只能追加到行尾**

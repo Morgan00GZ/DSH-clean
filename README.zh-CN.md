@@ -1,6 +1,6 @@
 # DSH-clean
 
-![version](https://img.shields.io/badge/version-0.3.0-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
+![version](https://img.shields.io/badge/version-0.3.1-blue) ![license](https://img.shields.io/badge/license-MIT-green) ![platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey)
 
 **审计并清理 Windows 上 DeepSeek Harness 桌面端的占用与残留。**
 
@@ -47,7 +47,7 @@ DSH-clean 是一个零依赖的 Node 命令行工具，只回答关于一台机�
 
 ## 安装
 
-1. 从 [Releases](https://github.com/Morgan00GZ/DSH-clean/releases) 下载 `dsh-clean-0.3.0.zip`。
+1. 从 [Releases](https://github.com/Morgan00GZ/DSH-clean/releases) 下载 `dsh-clean-0.3.1.zip`。
 2. 解压到普通目录——不要放在 `C:\Windows`，也不要放在 DeepSeek Harness 安装目录里。
 3. 双击 `install.cmd`。
 4. 重启 DSH（或新开一个会话），输入 `/dsh-clean`。
@@ -92,7 +92,7 @@ install.cmd
 人类可读输出（节选）：
 
 ~~~
-DSH-clean v0.3.0 - 2026-11-02 12:00
+DSH-clean v0.3.1 - 2026-11-03 12:00
 
 环境
   DSH 桌面端   0.2.1-rc.3
@@ -111,7 +111,7 @@ DSH 相关文件夹（8）
 agent 输出（`--agent`，最多两行）：
 
 ~~~
-PURITY v0.3.0 dsh=44.7.0 roots=10 files=50792 residue=1/0B unknown=0 sessions=11/32.4MB purity=0 integrity=ok plugins=182/0 patch=0/0 probe=+3/0 locked=0 known=0 leftover=0 next=review cfgbad=1
+PURITY v0.3.1 dsh=44.7.0 roots=10 files=50792 residue=1/0B unknown=0 sessions=11/32.4MB purity=0 integrity=ok plugins=182/0 patch=0/0 probe=+3/0 locked=0 known=0 leftover=0 next=review cfgbad=1
 ~~~
 
 ## 卸载
@@ -144,6 +144,8 @@ DSH 不自带独立 `node.exe`；DSH-clean 复用现有运行时，顺序如下�
 - **执行策略与杀软**：`install.cmd` 用 `-ExecutionPolicy Bypass` 运行脚本以绕过执行策略限制；向用户目录写入文件仍可能触发杀软提示。
 - **CLI 输出为中文**：控制台与 `report.md` 目前是中文；助手会用你的语言汇报，也可按需翻译，CLI 自身的英文输出尚未实现。
 - **仅 Windows**：回收站与注册表发现都是 Windows 专有实现。引擎层已按可移植方式组织，但暂不支持其他平台。
+- **会话 preset 创建时固定**：DSH 会话的工具集在创建时选定，中途不能切换。标准会话可能没有命令工具（`ops_bash`），技能会退到只读汇报；要真扫并用完整输出，请**新建**一个带 `ops_bash` 的会话（PTC 等），而不是在已有会话里切模式。
+- **纯净度校验优先用 Electron 的 `original-fs`**：CLI 零依赖，但要正确读取 `app.asar` 必须用只在 Electron 里存在的 `original-fs`；普通 Node 运行时下这些文件会显示为大小 0 的归档，纯净度可能退化成「大小+时间」检查。请用自带启动器（Electron 以 Node 模式运行）以获得完整保真。
 
 ## 文档
 
@@ -157,20 +159,20 @@ DSH 不自带独立 `node.exe`；DSH-clean 复用现有运行时，顺序如下�
 
 ## 版本与发布
 
-- 当前版本：**0.3.0**（`lib/version.mjs`），发布 tag：**0.3**。
-- 每个版本把 `dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt` 挂在 GitHub Release 上；ZIP 由 `git archive` 按 tag 生成，内容与 tag 完全一致（测试与开发脚本通过 `.gitattributes` 排除）。
+- 当前版本：**0.3.1**（`lib/version.mjs`），发布 tag：**0.3.1**。
+- 每个版本把 `dsh-clean-0.3.1.zip` 与 `SHA256SUMS.txt` 挂在 GitHub Release 上；ZIP 由 `git archive` 按 tag 生成，内容与 tag 完全一致（测试与开发脚本通过 `.gitattributes` 排除）。
 - 运行前可先校验下载物：
 
 ~~~powershell
-Get-FileHash .\dsh-clean-0.3.0.zip -Algorithm SHA256
+Get-FileHash .\dsh-clean-0.3.1.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS.txt
 ~~~
 
-- 本地打包：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.3`。
+- 本地打包：`powershell -NoProfile -ExecutionPolicy Bypass -File tools\release.ps1 -Tag 0.3.1`。
 - 推送提交与 tag（Windows）：双击 `tools\push.cmd`。只用 git——不需要 Node，也不需要 PowerShell。先列出改动，默认提交信息 `chore: sync local changes`（可传一个消息进去），然后推当前分支与全部 tag；`--dry-run` 只预览、不提交不推送。
-- 给 tag `0.3` 挂 GitHub Release：双击 `tools\release-gh.cmd`。不需要 GitHub CLI——直接走 REST API；令牌取 `-Token`、`GITHUB_TOKEN` 或 git 凭据管理器（先推送一次就有了）。上传 `archives\dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt`；`-Force` 覆盖说明并重传附件。
+- 给 tag `0.3.1` 挂 GitHub Release：双击 `tools\release-gh.cmd`。不需要 GitHub CLI——直接走 REST API；令牌取 `-Token`、`GITHUB_TOKEN` 或 git 凭据管理器（先推送一次就有了）。上传 `archives\dsh-clean-0.3.0.zip` 与 `SHA256SUMS.txt`；`-Force` 覆盖说明并重传附件。
 
-（待补充：tag 是否统一改成 `v0.3.0` 形式；目前沿用 `0.1` 的短格式（`0.2`、`0.3`），与 `VERSION` 0.3.0 的对应关系是「去掉补丁位」。）
+（tag 沿用短格式：`0.3.1` 与 `VERSION` 0.3.1 的对应关系是「去掉补丁位」，即 tag = `0.3.1`。）
 
 ## 许可证
 
