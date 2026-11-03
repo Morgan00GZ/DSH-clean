@@ -64,7 +64,7 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 1. 读状态摘要（一次调用）：`ops_read_files` 读 `<状态目录>\last-run.json`，里面的 `line` 字段就是上次的 `PURITY …` 结论行。状态目录默认是 `D:\DeepSeek Harness\Temp\dsh-clean`（拿不准就先看 `C:\Users\User\AppData\Local\dsh-clean\install.json` 的 `stateDir`）。
 2. 取最新报告：列 `<状态目录>\reports\`，挑名字最大（时间最新）的那个目录，读它的 `report.md` **前 60 行**即可；不要整份读（约 13KB ≈ 4k token）。
 3. 汇报：先说清「这是上次扫描（时间）的结论」，再给数字 —— `files=` 文件数、`bytes=` 占用、`residue=` 残留、`purity=` 纯净度、`plugins=` 插件；然后照常用 `present` 把那份 `report.md` 交出去。
-4. 用户要**最新**状态时，只给一个图形动作（他不看命令行）：
+4. 用户要**最新**状态时（**每次汇报结尾都补这一句，别等他问**）只给一个图形动作（他不看命令行）：
    「双击 `scan.cmd` 跑一次（或工作区里的 `dsh-clean.cmd`），跑完告诉我一声」
    用户回来说跑完了，再回到第 1 步读新报告。
 5. 这一分支**做不了**清理（review/apply/prune 要起子进程）：直说「清理要命令工具，请在有 shell 的会话里做，或双击 `apply.cmd`」，不要把清理说成已经做了。
@@ -153,7 +153,9 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 ## 收尾（看到 reports=N/prune 就直接做，不用问）
 
-`scan` 每跑一次攒一份报告，攒多了 `--agent` 行尾会出现 `reports=N/prune`。**看到这个标记就直接跑，不要问用户、也不要先 `--dry-run`**：
+**只有分支 A（有 shell）才能跑 prune。** 分支 B（只读）看到 `reports=N/prune` 时既不要跑、也不要提议「我顺手清一下」——改说一句「报告攒了 N 份，清理要命令工具，双击 `prune.cmd` 或换有 shell 的会话」。
+
+`scan` 每跑一次攒一份报告，攒多了 `--agent` 行尾会出现 `reports=N/prune`。分支 A 里**看到这个标记就直接跑，不要问用户、也不要先 `--dry-run`**：
 
 ```
 {{DSH_CLEAN_CMD}} prune --agent
