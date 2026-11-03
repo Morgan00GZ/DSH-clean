@@ -89,6 +89,17 @@ install.cmd
 
 完整命令契约见 [docs/cli.md](docs/cli.md)。
 
+### 可选：报告插件（任何预设可用，标准模式也能真扫）
+
+标准模式会话没有 shell 工具，只靠技能无法扫描。装一次自带的宿主侧插件，会话里就会多出工具 `dsh_clean_report` —— 一次调用、约 2 秒、**不需要 dsh-ops**：
+
+~~~
+dsh plugin --profile desktop add file:<repo>/plugin
+~~~
+
+重启客户端后在会话里用：`action="status"` 看最近一次结论，`action="scan"` 真跑一次扫描，`action="report"` 看报告开头。它只读——清理仍走 `review` / `apply` / `prune`。卸载：`dsh plugin --profile desktop remove dsh-clean-report`。
+
+
 人类可读输出（节选）：
 
 ~~~

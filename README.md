@@ -89,6 +89,17 @@ Without a conversation, double-click `dsh-clean.cmd` for an interactive console 
 
 The full command contract lives in [docs/cli.md](docs/cli.md).
 
+### Optional: report plugin (any preset, including the standard mode)
+
+Sessions running the **standard** preset have no shell tool, so a skill alone cannot scan. Install the bundled host-side plugin once and the tool `dsh_clean_report` becomes available everywhere - one call, ~2 seconds, no `dsh-ops` required:
+
+~~~
+dsh plugin --profile desktop add file:<repo>/plugin
+~~~
+
+Restart the client, then in a session: `action="status"` for the latest verdict, `action="scan"` for a fresh scan, `action="report"` for the top of the report. It is read-only - cleanup still goes through `review` / `apply` / `prune`. Uninstall with `dsh plugin --profile desktop remove dsh-clean-report`.
+
+
 Sample human output (excerpt):
 
 ~~~
