@@ -9,36 +9,23 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 ## 执行入口（先看这里，别去找工具）
 
-**先看一次工具表选通道，不要试错。** 三个通道从上到下优先：
+**先看一次工具表选分支，不要试错。** 三条分支互斥：
 
 | 工具表里有 | 走哪条 |
 | --- | --- |
-| `dsh_clean_report` | 通道 1：调插件工具，见「通道 1：插件（首选）」——**任何会话预设都能用，标准模式也能真扫描** |
-| `ops_bash`（PTC 下是 `run_code` 里的 `tools.ops_bash`） | 通道 2：跑 CLI，见「通道 2：命令」 |
-| 两个都没有 | 通道 3：**明确说本会话扫不了**，见「通道 3：都缺时」 |
+| `ops_bash`（PTC 下是 `run_code` 里的 `tools.ops_bash`） | 分支 A：直接跑命令，见下面「执行」 |
+| 没有 shell，但有 `ops_read_files` / `ops_inspect_local_file` | 分支 B：只读汇报，见「没有 shell 时」 |
+| 两个都没有 | 分支 C：一句话说明本会话缺命令工具、给一个双击入口，然后停 |
 
-三条通道都要守的规矩：
+三条分支都要守的规矩：
 
 - **不要**用 `ops_discover_tools` 找 shell / bash / 终端：它永远匹配不到，只会白跑十几步（真实案例：一次会话 3/4 的 token 耗在这里）。
 - **不要**中途订阅新工具（`ops_load_sdk`、`ops_discover_tools` 选中）。工具表一变前缀缓存全废，之后每一步都按全价重付。
 - **不要**调 `mcp_connector_catalog`、列插件清单之类与本任务无关的工具。
-- 通道 1 只要**一次工具调用**，是三个通道里最省 token 的；能走它就走它，不要再包一层 shell。
-- 通道 2 依赖本机装了 **dsh-ops** 插件（`ops_bash` 由它提供）。工具表里没有 `ops_bash` 时，不要猜「dsh-ops 没装」就下结论，按通道 3 说清楚缺什么。
-- PTC 只是**更快**（命令直连、审批链更短），不是前置条件；标准模式走通道 1 也能真扫描，不要因此拒绝任务、更不要让用户去别的会话重跑。
-- 通道 2 的常态会话固定 3 步：① 一条 `scan --agent`；② `present` 报告文件卡；③ 按结论回话（行尾有 `reports=N/prune` 就顺手 prune）。
+- PTC 只是**更快**（命令直连、审批链更短），不是前置条件；标准模式走不到分支 A 就走分支 B，不要因此拒绝任务、也不要让用户去别的会话重跑。
+- 分支 A 的常态会话固定 3 步：① 一条 `scan --agent`；② `present` 报告文件卡；③ 按结论回话（行尾有 `reports=N/prune` 就顺手 prune）。
 
-## 通道 1：插件（首选）
-
-工具表里有 `dsh_clean_report` 就直接用，**不要**再去找 shell、也不要读文件拼结论。它跑在宿主侧，标准模式下同样能真扫描：
-
-- 要结论：`dsh_clean_report({ "action": "status" })` —— 返回最近一次 `PURITY …` 行、报告路径、报告多旧、报告攒了几份。
-- 要最新数据：`dsh_clean_report({ "action": "scan" })` —— **现在真跑一次扫描**（约 2 秒），返回新的 `PURITY …` 行和报告路径。
-- 要看报告细节：`dsh_clean_report({ "action": "report", "lines": 60 })` —— 只给前 60 行，不要整份要。
-- `action` 默认 `status`；`full: true` 只对 `scan` 生效（全量）。
-
-拿到 `reportPath` 照常 `present` 出文件卡。**它只读**：不删文件，清理仍走通道 2 的 review/apply/prune。
-
-## 通道 2：命令
+## 执行
 
 ```
 {{DSH_CLEAN_CMD}} scan --agent
@@ -70,17 +57,17 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 **不要**主动把 report.md 整份读进上下文（约 13KB ≈ 4k token）—— 用户追问哪块就用上面那条 `--section=`。
 
-## 通道 3：都缺时
+## 没有 shell 时（标准模式只读汇报）
 
-工具表里既没有 `dsh_clean_report`、也没有 `ops_bash` / `run_code`。**这时不要拿旧报告冒充结论**——用户要的是「现在干不干净」，读一份几小时前的报告对他没意义，反而浪费 token。做法只有三件事：
+工具表里没有 `ops_bash` / `run_code`，但有 `ops_read_files`（目前标准模式会话就是这样）。**不要空转、不要臆测扫描结果、也不要让用户换个会话重跑**，改用读文件把上一次的结论讲清楚：
 
-1. **一句话说清扫不了**：「这个会话没有命令工具，也没有 DSH-clean 报告插件，我没法真扫描。」
-2. **给一个图形动作**（用户不看命令行）：「双击 `<状态目录>\scan.cmd` 跑一次（约 2 秒），回来说一声我读结果」；要清理就让用户双击 `apply.cmd` / `prune.cmd`，并说明这两个只在用户确认后才动手、删除一律进回收站。
-3. **给两条根治建议**，说一句就够：
-   - 换 **PTC 模式**会话（有 `ops_bash`，命令直连、最省审批）；
-   - 或装 **dsh-clean 报告插件**（`dsh_clean_report`，装一次之后**标准模式也能真扫描**，一次调用约 2 秒）。装它不需要 dsh-ops；只有走命令通道才依赖 dsh-ops 提供的 `ops_bash`。
-
-如果本会话里**已经**真扫过一次（通道 1 或 2），那就直接用那次的结果回答，不要说「扫不了」。
+1. 读状态摘要（一次调用）：`ops_read_files` 读 `<状态目录>\last-run.json`，里面的 `line` 字段就是上次的 `PURITY …` 结论行。状态目录默认是 `D:\DeepSeek Harness\Temp\dsh-clean`（拿不准就先看 `C:\Users\User\AppData\Local\dsh-clean\install.json` 的 `stateDir`）。
+2. 取最新报告：列 `<状态目录>\reports\`，挑名字最大（时间最新）的那个目录，读它的 `report.md` **前 60 行**即可；不要整份读（约 13KB ≈ 4k token）。
+3. 汇报：先说清「这是上次扫描（时间）的结论」，再给数字 —— `files=` 文件数、`bytes=` 占用、`residue=` 残留、`purity=` 纯净度、`plugins=` 插件；然后照常用 `present` 把那份 `report.md` 交出去。
+4. 用户要**最新**状态时（**每次汇报结尾都补这一句，别等他问**）只给一个图形动作（他不看命令行）：
+   「双击 `scan.cmd` 跑一次（或工作区里的 `dsh-clean.cmd`），跑完告诉我一声」
+   用户回来说跑完了，再回到第 1 步读新报告。
+5. 这一分支**做不了**清理（review/apply/prune 要起子进程）：直说「清理要命令工具，请在有 shell 的会话里做，或双击 `apply.cmd`」，不要把清理说成已经做了。
 ## 怎么汇报
 
 - 用用户消息所用的语言汇报（用户说中文就说中文，说英文就说英文）。
@@ -166,9 +153,9 @@ description: 清点 DeepSeek Harness 桌面端在本机的全部文件夹占用�
 
 ## 收尾（看到 reports=N/prune 就直接做，不用问）
 
-**只有通道 2（有 shell）才能跑 prune。** 通道 1 / 通道 3 看到 `reports=N/prune` 时既不要跑、也不要提议「我顺手清一下」——改说一句「报告攒了 N 份，清理要命令工具，双击 `prune.cmd` 或换有 shell 的会话」。
+**只有分支 A（有 shell）才能跑 prune。** 分支 B（只读）看到 `reports=N/prune` 时既不要跑、也不要提议「我顺手清一下」——改说一句「报告攒了 N 份，清理要命令工具，双击 `prune.cmd` 或换有 shell 的会话」。
 
-`scan` 每跑一次攒一份报告，攒多了 `--agent` 行尾会出现 `reports=N/prune`。通道 2 里**看到这个标记就直接跑，不要问用户、也不要先 `--dry-run`**：
+`scan` 每跑一次攒一份报告，攒多了 `--agent` 行尾会出现 `reports=N/prune`。分支 A 里**看到这个标记就直接跑，不要问用户、也不要先 `--dry-run`**：
 
 ```
 {{DSH_CLEAN_CMD}} prune --agent

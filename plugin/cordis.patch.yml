@@ -1,5 +1,0 @@
-# dsh-clean-report：只读报告工具，装在 profile 层，任何会话预设都能看到。
-# 工具本身不清理任何东西：scan 只写报告，清理仍由 CLI 的 apply/prune 执行。
-- insert:
-    - id: dsh-clean-report
-      name: dsh-clean-report

@@ -4,21 +4,13 @@
 
 ## [Unreleased]
 
-### 新增 - 报告插件 `dsh_clean_report`（标准模式也能真扫）
+### 技能 - 标准模式不再空转（能力分支）
 
-- `plugin/` 是零依赖的宿主侧工具插件（`id: dsh-clean-report`，`dsh.bundle.patch: ./cordis.patch.yml`），提供工具 `dsh_clean_report`：`action=status` 读上一次结论行与报告路径，`action=scan` **在宿主进程里真跑一次扫描**（`ELECTRON_RUN_AS_NODE=1` 拉起 `dsh-clean.mjs scan --agent`，约 2 秒），`action=report` 只回报告前 N 行。**不依赖 dsh-ops、不依赖 shell**，任何会话预设都能调用
-- 安装：`dsh plugin --profile desktop add file:<repo>/plugin`，装完重启客户端生效；卸载从 profile 移除，不写额外状态
-- 技能新增通道 1（优先用它：一次工具调用，最省 token）
-
-### 技能 - 三条通道：PTC 省 token，标准模式也能扫
-
-- 「执行入口」改成按**工具表**选通道，禁止试错：通道 1 `dsh_clean_report` → 通道 2 `ops_bash` 跑 `scan --agent`（PTC 下是 `run_code` 里的 `tools.ops_bash`）→ 通道 3 两者都缺
-- 通道 3 **不许拿旧报告冒充结论**（用户要的是「现在干不干净」）：一句话说本会话扫不了 + 给双击 `scan.cmd` / `apply.cmd` / `prune.cmd` + 两条根治建议（换 PTC；或装报告插件，装一次标准模式也能真扫）。并说明**只有命令通道依赖 dsh-ops** 提供的 `ops_bash`
-- 明确 PTC 只是「更快」，不是前置条件；标准模式走通道 1 同样能扫，不许拒绝任务、也不许让用户换会话重跑
-- 清理能力按通道表述：通道 1 只读，`review` / `apply` / `prune` 仍走命令通道；`apply` 第一次就带 `danger-full-access`，审批被拒或退出码 `3` 只报告不重试
+- `skill/SKILL.md` 的「执行入口」从「必须有 shell」改成三分支：有 `ops_bash` → 直接扫描；**没有 shell 但有 `ops_read_files`** → 只读汇报（读 `<状态目录>\last-run.json` 的结论行 + 最新 `report.md` 前 60 行，再用 `present` 交报告；需要新数据时给用户一个双击入口）；两者都没有 → 一句话收尾。PTC 只作「更快」提示，不再是前置条件，也不许让用户换会话重跑
+- 清理（`review` / `apply` / `prune`）明确「要命令工具」：只读分支不许把清理说成已完成；`apply` **第一次就带** `danger-full-access`，审批被拒或退出码 `3` 只报告不重试
 - `prune` 默认保留报告 10 → 20 份（`lib/prune.mjs` 的 `KEEP_DEFAULT`、`lib/report.mjs` 的 `REPORT_KEEP`），`--keep=N` 仍可覆盖
 - 汇报固定带 `files` / `bytes` / `seconds` / `report` 四个数字（从 scan 输出抄，不重算）
-- 背景：标准模式会话（`agent-preset/selected: standard`）的工具表里确实没有 `ops_bash` / `pwsh` / `run_code`（dsh-ops 0.4.4 的 `MODE_PLANS.standard` 声明了 `shell:true`，但实际 gate 未放行）；旧技能在这种会话里只能空转或让用户换会话
+- 背景：标准模式会话（`agent-preset/selected: standard`）工具表只有文件类工具，没有 `ops_bash` / `pwsh` / `run_code`；旧技能在这种会话里要么让 agent 空转，要么让用户换会话
 ### 修复 - 安装不再分裂状态目录
 
 - `install` 的状态目录改为「只定一次」：`--state-dir` → 上次安装记录 → 首次安装时的 `<当前目录>\Temp\dsh-clean`。以前每次都由 cwd 推导，从不同目录重装会生成第二个状态目录，基线（`baseline.json`）、判例、名册、报告全对不上，纯净度会误报「新增」
