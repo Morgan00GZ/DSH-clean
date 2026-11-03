@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+### 技能 - 省 token（执行入口 + 3 步流程）
+
+- 新增「执行入口」段：明确命令在手上已有的 `ops_bash`（PTC 下是 `run_code` 里的 `tools.ops_bash`）里跑，禁止用 `ops_discover_tools` 找 shell、禁止中途订阅新工具、禁止调与本任务无关的工具；常态会话固定 3 步（`scan --agent` → `present` → 回话，有 `reports=N/prune` 顺手 prune）
+- 清理流程从 4 段压成 3 步（`review` → 一次问清 → `apply` 并在同一条回复里汇报），不再逐段来回
+- 背景：真机会话审计显示一次 `/dsh-clean` 扫描 1.07M + 清理 0.55M prompt，其中 14 步（约 0.8M）耗在用 `ops_discover_tools` 找 shell；中途 `ops_load_sdk` 订阅改变工具表后，4 次前缀缓存全废、按全价重付
+
 ### 发布工具 - 推送与挂 Release
 
 - `tools/push.cmd`：双击即推送，只用 git（不需要 Node，也不需要 PowerShell）。先 `git status --short`，然后 `git add -A` + `git commit -m "chore: sync local changes"`（可直接传自己的提交信息；没有新改动也继续推），再推当前分支与全部 tag；推送前会 `git fetch`，远端有本地没有的提交时列出双方的提交并问是否用本地覆盖（`--force` 跳过询问，用 `--force-with-lease`）；`--dry-run` 只列出分支、领先提交数与本地 tag
